@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RideMitra">
+  <path d="M15 62 L27.5 39 H36.5 L49 62 Z" fill="#12334b"/>
+  <path d="M31 45.5h2v4h-2zM30.6 53h2.8v5h-2.8z" fill="#ffffff"/>
+  <path d="M32 3C20.4 3 11.5 11.6 11.5 22.8 11.5 36.4 32 51 32 51S52.5 36.4 52.5 22.8C52.5 11.6 43.6 3 32 3Z" fill="#19a875"/>
+  <circle cx="32" cy="22.5" r="13" fill="#ffffff"/>
+  <path d="M24.6 21.2 27.4 16.6C27.8 16 28.4 15.7 29.1 15.7H35.1C35.8 15.7 36.4 16 36.8 16.6L39.6 21.2C41 21.4 42 22.6 42 24V26.4C42 27.2 41.4 27.8 40.6 27.8H23.4C22.6 27.8 22 27.2 22 26.4V24C22 22.6 23.1 21.4 24.6 21.2Z" fill="#12334b"/>
+  <path d="M27 21 28.9 18H31.4V21ZM33 21V18H35.3L37.2 21Z" fill="#ffffff"/>
+  <circle cx="26.8" cy="28" r="2.6" fill="#12334b" stroke="#ffffff" stroke-width="1.2"/>
+  <circle cx="37.2" cy="28" r="2.6" fill="#12334b" stroke="#ffffff" stroke-width="1.2"/>
+</svg>
