@@ -38,8 +38,48 @@ function getRides(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch
 function saveRides(r){localStorage.setItem(KEY,JSON.stringify(r))}
 function setMode(mode,btn){document.getElementById('searchForm').style.display=mode==='search'?'grid':'none';document.getElementById('postForm').style.display=mode==='post'?'grid':'none';document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
 function openPost(){setMode('post',document.querySelectorAll('.tab')[1]);document.querySelector('.hero-card').scrollIntoView({behavior:'smooth'})}
-function postRide(e){e.preventDefault();const ride={id:Date.now(),from:document.getElementById('postFrom').value.trim(),to:document.getElementById('postTo').value.trim(),date:document.getElementById('postDate').value,seats:Number(document.getElementById('postSeats').value),price:Number(document.getElementById('postPrice').value),driver:document.getElementById('postDriver').value.trim(),vehicle:document.getElementById('postVehicle').value.trim(),created:Date.now()};const rides=getRides();rides.unshift(ride);saveRides(rides);e.target.reset();renderRides();showToast('Ride published successfully!');setMode('search',document.querySelectorAll('.tab')[0]);}
-function searchRides(e){if(e)e.preventDefault();const from=(document.getElementById('filterFrom').value||document.getElementById('searchFrom').value).trim().toLowerCase();const to=(document.getElementById('filterTo').value||document.getElementById('searchTo').value).trim().toLowerCase();const date=document.getElementById('filterDate').value||document.getElementById('searchDate').value;renderRides({from,to,date});document.getElementById('rides').scrollIntoView({behavior:'smooth',block:'center'})}
+async function postRide(e) {
+  e.preventDefault();
+
+  const ride = {
+    from_city: document.getElementById('postFrom').value.trim(),
+    to_city: document.getElementById('postTo').value.trim(),
+    ride_date: document.getElementById('postDate').value,
+    seats_available: Number(document.getElementById('postSeats').value),
+    price_per_seat: Number(document.getElementById('postPrice').value),
+    driver_name: document.getElementById('postDriver').value.trim(),
+    vehicle_details: document.getElementById('postVehicle').value.trim()
+  };
+
+  try {
+    const response = await fetch(SUPABASE_URL + 'rides', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(ride)
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error);
+    }
+
+    const savedRide = await response.json();
+
+    showToast('Ride saved successfully in Cloud!');
+    e.target.reset();
+
+    console.log('Supabase ride saved:', savedRide);
+
+  } catch (error) {
+    console.error('Supabase error:', error);
+    showToast('Ride save failed: ' + error.message);
+  }
+}function searchRides(e){if(e)e.preventDefault();const from=(document.getElementById('filterFrom').value||document.getElementById('searchFrom').value).trim().toLowerCase();const to=(document.getElementById('filterTo').value||document.getElementById('searchTo').value).trim().toLowerCase();const date=document.getElementById('filterDate').value||document.getElementById('searchDate').value;renderRides({from,to,date});document.getElementById('rides').scrollIntoView({behavior:'smooth',block:'center'})}
 function renderRides(filters={}){let rides=getRides();if(filters.from)rides=rides.filter(r=>r.from.toLowerCase().includes(filters.from));if(filters.to)rides=rides.filter(r=>r.to.toLowerCase().includes(filters.to));if(filters.date)rides=rides.filter(r=>r.date.startsWith(filters.date));const el=document.getElementById('rides');if(!rides.length){el.innerHTML='<div class="empty">🚗<br><strong>No rides found yet.</strong><br>Post the first ride or try another search.</div>';return}el.innerHTML=rides.map(r=>`<article class="ride-card"><div class="ride-top"><div class="route">${escapeHtml(r.from)} → ${escapeHtml(r.to)}</div><div class="price">₹${r.price}</div></div><div class="ride-details"><span>📅 ${formatDate(r.date)}</span><span>💺 ${r.seats} seat(s)</span></div>${r.vehicle?`<div class="ride-details">🚘 ${escapeHtml(r.vehicle)}</div>`:''}<div class="driver"><div class="avatar">${escapeHtml((r.driver||'D').charAt(0).toUpperCase())}</div><div><strong>${escapeHtml(r.driver)}</strong><small>RideMitra driver</small></div></div><button class="btn primary book" onclick="openBooking(${r.id})">Request a seat</button></article>`).join('')}
 function formatDate(d){if(!d)return'Flexible date';try{return new Date(d).toLocaleString()}catch{return d}}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
