@@ -49,8 +49,8 @@ function confirmBooking(){const name=document.getElementById('bookName').value.t
 function showMyRides(){const rides=getRides();const bookings=JSON.parse(localStorage.getItem(BOOKKEY)||'[]');alert(`RideMitra demo\\n\\nRides posted: ${rides.length}\\nBooking requests: ${bookings.length}\\n\\nThis prototype saves data only on this device/browser.`)}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200)}
 renderRides();
-const SUPABASE_URL = "https://kokxkrkwsogd...supabase.co";
-const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://kokxrkrwdsogdtookepb.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_KraLjOOY3GBGeNJwbo-vFQ_njFkMSTS";
 </script>
 const KEY='ridemitra_v2_rides',BOOKKEY='ridemitra_v2_bookings';  
 </body>
