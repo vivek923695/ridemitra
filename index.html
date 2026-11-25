@@ -1174,6 +1174,360 @@ document.getElementById("bookingModal")
     });
 
 </script>
+<!-- =====================================
+     RIDEMITRA DASHBOARD
+===================================== -->
 
+<section id="dashboardSection" style="display:none">
+<div class="container">
+
+    <div class="heading">
+        <h2>My Dashboard</h2>
+        <p>Manage your rides and booking requests.</p>
+    </div>
+
+    <div class="panel">
+
+        <div class="tabs">
+            <button class="tab active"
+                onclick="showDashboardTab('driver',this)">
+                Driver Bookings
+            </button>
+
+            <button class="tab"
+                onclick="showDashboardTab('passenger',this)">
+                My Bookings
+            </button>
+        </div>
+
+        <div id="driverDashboard">
+            <h3>Booking Requests Received</h3>
+            <div id="driverBookings">
+                Loading...
+            </div>
+        </div>
+
+        <div id="passengerDashboard" style="display:none">
+            <h3>My Booking History</h3>
+            <div id="passengerBookings">
+                Loading...
+            </div>
+        </div>
+
+    </div>
+</div>
+</section>
+
+<script>
+
+// =====================================
+// 1. SHOW DASHBOARD
+// =====================================
+
+async function openDashboard() {
+
+    if (!currentUser) {
+        showToast("Please login first.");
+        openLogin();
+        return;
+    }
+
+    const section = document.getElementById("dashboardSection");
+
+    section.style.display = "block";
+
+    section.scrollIntoView({
+        behavior: "smooth"
+    });
+
+    if (currentRole === "driver") {
+        await loadDriverBookings();
+    } else {
+        await loadPassengerBookings();
+    }
+}
+
+
+// =====================================
+// 2. DASHBOARD TABS
+// =====================================
+
+function showDashboardTab(type, button) {
+
+    document.querySelectorAll("#dashboardSection .tab")
+        .forEach(tab => tab.classList.remove("active"));
+
+    button.classList.add("active");
+
+    document.getElementById("driverDashboard").style.display =
+        type === "driver" ? "block" : "none";
+
+    document.getElementById("passengerDashboard").style.display =
+        type === "passenger" ? "block" : "none";
+
+    if (type === "driver") {
+        loadDriverBookings();
+    } else {
+        loadPassengerBookings();
+    }
+}
+
+
+// =====================================
+// 3. LOAD DRIVER BOOKINGS
+// =====================================
+
+async function loadDriverBookings() {
+
+    const box = document.getElementById("driverBookings");
+
+    if (!currentUser || currentRole !== "driver") {
+        box.innerHTML = "<p>Login with a driver account.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>Loading booking requests...</p>";
+
+    try {
+
+        const { data: rides, error: rideError } =
+            await supabaseClient
+                .from("rides")
+                .select("id,from_city,to_city")
+                .eq("owner_id", currentUser.id);
+
+        if (rideError) throw rideError;
+
+        const rideIds = (rides || []).map(ride => ride.id);
+
+        if (!rideIds.length) {
+            box.innerHTML = "<p>You have not posted any rides yet.</p>";
+            return;
+        }
+
+        const { data: bookings, error } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("*")
+                .in("ride_id", rideIds)
+                .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!bookings || !bookings.length) {
+            box.innerHTML = "<p>No booking requests received yet.</p>";
+            return;
+        }
+
+        box.innerHTML = bookings.map(booking => {
+
+            const ride = rides.find(
+                item => Number(item.id) === Number(booking.ride_id)
+            );
+
+            const status = booking.status || "pending";
+
+            return `
+                <div class="ride-card" style="margin:12px 0">
+
+                    <h3>
+                    ${escapeHTML(ride?.from_city || "")}
+                    →
+                    ${escapeHTML(ride?.to_city || "")}
+                    </h3>
+
+                    <p><b>Passenger:</b>
+                    ${escapeHTML(booking.passenger_name)}</p>
+
+                    <p><b>Phone:</b>
+                    ${escapeHTML(booking.passenger_phone)}</p>
+
+                    <p><b>Seats requested:</b>
+                    ${Number(booking.seats_requested || 1)}</p>
+
+                    <p><b>Status:</b>
+                    ${escapeHTML(status.toUpperCase())}</p>
+
+                    ${
+                        status === "pending"
+                        ? `
+                        <button class="btn primary"
+                        onclick="acceptBooking(${Number(booking.id)})">
+                        Accept
+                        </button>
+
+                        <button class="btn outline"
+                        onclick="rejectBooking(${Number(booking.id)})">
+                        Reject
+                        </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+            `;
+
+        }).join("");
+
+    } catch (error) {
+
+        console.error(error);
+        box.innerHTML =
+            "<p>Dashboard error: " + escapeHTML(error.message) + "</p>";
+
+    }
+}
+
+
+// =====================================
+// 4. ACCEPT BOOKING
+// =====================================
+
+async function acceptBooking(bookingId) {
+
+    if (!confirm("Accept this booking? One seat will be deducted.")) {
+        return;
+    }
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .rpc("accept_booking", {
+                p_booking_id: bookingId
+            });
+
+        if (error) throw error;
+
+        showToast(data || "Booking accepted.");
+
+        await loadDriverBookings();
+        await renderRides();
+
+    } catch (error) {
+
+        console.error(error);
+        showToast("Accept failed: " + error.message);
+
+    }
+}
+
+
+// =====================================
+// 5. REJECT BOOKING
+// =====================================
+
+async function rejectBooking(bookingId) {
+
+    if (!confirm("Reject this booking request?")) {
+        return;
+    }
+
+    try {
+
+        const { data: booking, error: readError } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("id,ride_id")
+                .eq("id", bookingId)
+                .single();
+
+        if (readError) throw readError;
+
+        const { data: ride, error: rideError } =
+            await supabaseClient
+                .from("rides")
+                .select("owner_id")
+                .eq("id", booking.ride_id)
+                .single();
+
+        if (rideError) throw rideError;
+
+        if (ride.owner_id !== currentUser.id) {
+            throw new Error("You are not the ride owner.");
+        }
+
+        const { error } = await supabaseClient
+            .from("booking_requests")
+            .update({ status: "rejected" })
+            .eq("id", bookingId)
+            .eq("status", "pending");
+
+        if (error) throw error;
+
+        showToast("Booking rejected.");
+
+        await loadDriverBookings();
+
+    } catch (error) {
+
+        console.error(error);
+        showToast("Reject failed: " + error.message);
+
+    }
+}
+
+
+// =====================================
+// 6. PASSENGER BOOKING HISTORY
+// =====================================
+
+async function loadPassengerBookings() {
+
+    const box = document.getElementById("passengerBookings");
+
+    if (!currentUser) {
+        box.innerHTML = "<p>Please login first.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>Loading your bookings...</p>";
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("booking_requests")
+            .select("*")
+            .eq("passenger_id", currentUser.id)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || !data.length) {
+            box.innerHTML = "<p>You have not booked any rides yet.</p>";
+            return;
+        }
+
+        box.innerHTML = data.map(booking => `
+            <div class="ride-card" style="margin:12px 0">
+
+                <h3>Booking #${Number(booking.id)}</h3>
+
+                <p><b>Passenger:</b>
+                ${escapeHTML(booking.passenger_name)}</p>
+
+                <p><b>Phone:</b>
+                ${escapeHTML(booking.passenger_phone)}</p>
+
+                <p><b>Status:</b>
+                ${escapeHTML(
+                    (booking.status || "pending").toUpperCase()
+                )}</p>
+
+                <p><b>Booking Date:</b>
+                ${formatDate(booking.created_at)}</p>
+
+            </div>
+        `).join("");
+
+    } catch (error) {
+
+        console.error(error);
+        box.innerHTML =
+            "<p>History error: " + escapeHTML(error.message) + "</p>";
+
+    }
+}
+
+</script>
 </body>
 </html>                                 
