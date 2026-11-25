@@ -192,3 +192,687 @@ gap:10px
 .rides{
 display:grid;
 grid-template-columns:repeat(3
+<body>
+<header>
+<div class="container nav">
+<a class="logo" href="#">
+<span style="font-size:32px">🚗</span>
+<span>
+<span class="logo-name">Ride<b>Mitra</b></span>
+<div class="logo-tag">Travel Together, Save Together.</div>
+</span>
+</a>
+
+<div class="nav-actions">
+<button class="btn outline" onclick="showMyRides()">My Rides</button>
+<button class="btn primary" onclick="openPost()">+ Offer a ride</button>
+</div>
+</div>
+</header>
+
+<section class="hero">
+<div class="container hero-grid">
+
+<div>
+<span class="badge">🤝 SHARING JOURNEYS, BUILDING CONNECTIONS</span>
+
+<h1>Your Journey.<br>Your <span>Mitra.</span></h1>
+
+<p class="intro">
+Find people going your way. Share your ride, save money,
+and make every journey a little easier.
+</p>
+
+<div class="hero-card">
+
+<div class="tabs">
+<button class="tab active" onclick="setMode('search',this)">🔍 Find a ride</button>
+<button class="tab" onclick="setMode('post',this)">➕ Offer a ride</button>
+</div>
+
+<form id="searchForm" class="form-grid" onsubmit="searchRides(event)">
+
+<div class="field">
+<label>FROM</label>
+<input id="searchFrom" placeholder="Starting city">
+</div>
+
+<div class="field">
+<label>TO</label>
+<input id="searchTo" placeholder="Destination">
+</div>
+
+<div class="field">
+<label>DATE</label>
+<input id="searchDate" type="date">
+</div>
+
+<div class="field">
+<label>PASSENGERS</label>
+<select id="searchSeats">
+<option value="1">1 passenger</option>
+<option value="2">2 passengers</option>
+<option value="3">3 passengers</option>
+<option value="4">4 passengers</option>
+</select>
+</div>
+
+<button class="btn primary full wide">Search rides</button>
+</form>
+
+<form id="postForm" class="form-grid"
+style="display:none" onsubmit="postRide(event)">
+
+<div class="field">
+<label>FROM</label>
+<input id="postFrom" required placeholder="Starting city">
+</div>
+
+<div class="field">
+<label>TO</label>
+<input id="postTo" required placeholder="Destination">
+</div>
+
+<div class="field">
+<label>DATE & TIME</label>
+<input id="postDate" type="datetime-local" required>
+</div>
+
+<div class="field">
+<label>AVAILABLE SEATS</label>
+<select id="postSeats">
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+</select>
+</div>
+
+<div class="field">
+<label>PRICE PER SEAT (₹)</label>
+<input id="postPrice" type="number" min="0" required>
+</div>
+
+<div class="field">
+<label>DRIVER NAME</label>
+<input id="postDriver" required>
+</div>
+
+<div class="field wide">
+<label>VEHICLE DETAILS (OPTIONAL)</label>
+<input id="postVehicle" placeholder="Car model / number">
+</div>
+
+<div class="field wide">
+<label>VEHICLE PHOTO (OPTIONAL)</label>
+<input id="postPhoto" type="file"
+accept="image/jpeg,image/png,image/webp">
+</div>
+
+<button class="btn primary full wide"
+id="publishRideButton">Publish ride</button>
+
+</form>
+</div>
+</div>
+
+<div class="art">
+<div class="pill one">💸 Share travel costs</div>
+
+<div class="art-box">
+<div class="bigcar">🚙</div>
+<h3>Travel together</h3>
+<p>Good journeys are better with a Mitra.</p>
+<div style="color:var(--green);font-weight:800">
+Find your next ride →
+</div>
+</div>
+
+<div class="pill two">🌱 Affordable & community-driven</div>
+</div>
+
+</div>
+</section>
+
+<main>
+
+<section>
+<div class="container">
+
+<div class="panel">
+
+<div class="panel-title">
+<h2>Available rides</h2>
+<button class="btn outline" onclick="renderRides()">Refresh</button>
+</div>
+
+<form class="searchbar" onsubmit="searchRides(event)">
+
+<div class="field">
+<label>FROM</label>
+<input id="filterFrom" placeholder="Any starting city">
+</div>
+
+<div class="field">
+<label>TO</label>
+<input id="filterTo" placeholder="Any destination">
+</div>
+
+<div class="field">
+<label>DATE</label>
+<input id="filterDate" type="date">
+</div>
+
+<button class="btn primary">Filter</button>
+</form>
+
+<div id="rides" class="rides">
+<div class="empty">Loading rides...</div>
+</div>
+
+</div>
+</div>
+</section>
+
+<section style="background:#eef7f4">
+<div class="container">
+
+<div class="heading">
+<h2>How RideMitra works</h2>
+<p>Three simple steps to a shared journey.</p>
+</div>
+
+<div class="rides">
+
+<div class="ride-card">
+<div class="bigcar">🔍</div>
+<h3>Find a ride</h3>
+<p class="intro">Search by destination and journey date.</p>
+</div>
+
+<div class="ride-card">
+<div class="bigcar">🚗</div>
+<h3>Offer a ride</h3>
+<p class="intro">Post your trip and seats available.</p>
+</div>
+
+<div class="ride-card">
+<div class="bigcar">🤝</div>
+<h3>Connect</h3>
+<p class="intro">Send a booking request and coordinate your trip.</p>
+</div>
+
+</div>
+</div>
+</section>
+
+</main>
+
+<footer class="footer">
+<div class="container">
+
+<div class="logo" style="color:white">
+🚗 Ride<b style="color:var(--green)">Mitra</b>
+</div>
+
+<p>Travel Together, Save Together.</p>
+<p>Your Journey. Your Mitra. Ride sharing made simple.</p>
+<p>RideMitra — Cloud-based ride sharing prototype.</p>
+
+</div>
+</footer>
+
+<div class="modal" id="bookingModal">
+<div class="modal-box">
+
+<button style="float:right;border:0;background:none;font-size:24px"
+onclick="closeBooking()">×</button>
+
+<h2>Request a seat</h2>
+
+<div id="bookingInfo"></div>
+
+<div class="field" style="margin:15px 0">
+<label>YOUR NAME</label>
+<input id="bookName" placeholder="Enter your name">
+</div>
+
+<div class="field">
+<label>MOBILE NUMBER</label>
+<input id="bookPhone" type="tel
+  <script>
+
+// ======================================
+// SUPABASE CONFIGURATION
+// ======================================
+
+const SUPABASE_URL =
+"https://kokxrkrwdsogdtookepb.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_KraLjOOY3GBGeNJwbo-vFQ_njFkMSTS";
+
+const STORAGE_BUCKET = "ride-photos";
+const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
+let bookingRideId = null;
+
+function supabaseHeaders(extra = {}) {
+return {
+"apikey": SUPABASE_KEY,
+...extra
+};
+}
+
+// ======================================
+// STORAGE PHOTO UPLOAD
+// ======================================
+
+function safeFileName(name) {
+return String(name || "photo")
+.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+async function uploadVehiclePhoto(file) {
+
+if (!file) return null;
+
+if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
+throw new Error("Select JPG, PNG or WEBP image.");
+}
+
+if (file.size > MAX_PHOTO_SIZE) {
+throw new Error("Photo must be 5 MB or smaller.");
+}
+
+const path =
+`${Date.now()}-${Math.random().toString(36).slice(2)}-${safeFileName(file.name)}`;
+
+const response = await fetch(
+`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${encodeURIComponent(path)}`,
+{
+method:"POST",
+headers:supabaseHeaders({
+"Content-Type":file.type,
+"x-upsert":"false"
+}),
+body:file
+}
+);
+
+if (!response.ok) {
+throw new Error(await response.text());
+}
+
+return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${encodeURIComponent(path)}`;
+}
+
+// ======================================
+// FORM MODE
+// ======================================
+
+function setMode(mode,btn) {
+
+document.getElementById("searchForm").style.display =
+mode==="search" ? "grid" : "none";
+
+document.getElementById("postForm").style.display =
+mode==="post" ? "grid" : "none";
+
+document.querySelectorAll(".tab").forEach(tab =>
+tab.classList.remove("active")
+);
+
+btn.classList.add("active");
+}
+
+function openPost() {
+
+setMode("post",document.querySelectorAll(".tab")[1]);
+
+document.querySelector(".hero-card").scrollIntoView({
+behavior:"smooth"
+});
+
+}
+
+// ======================================
+// POST RIDE TO SUPABASE CLOUD
+// ======================================
+
+async function postRide(e) {
+
+e.preventDefault();
+
+const button =
+document.getElementById("publishRideButton");
+
+const photoFile =
+document.getElementById("postPhoto").files[0];
+
+button.disabled = true;
+button.textContent = "Publishing...";
+
+try {
+
+const vehicleImageUrl =
+await uploadVehiclePhoto(photoFile);
+
+const ride = {
+
+from_city:
+document.getElementById("postFrom").value.trim(),
+
+to_city:
+document.getElementById("postTo").value.trim(),
+
+ride_date:
+document.getElementById("postDate").value,
+
+seats_available:
+Number(document.getElementById("postSeats").value),
+
+price_per_seat:
+Number(document.getElementById("postPrice").value),
+
+driver_name:
+document.getElementById("postDriver").value.trim(),
+
+vehicle_details:
+document.getElementById("postVehicle").value.trim() || null,
+
+vehicle_image_url:vehicleImageUrl
+
+};
+
+const response = await fetch(
+`${SUPABASE_URL}/rest/v1/rides`,
+{
+method:"POST",
+
+headers:supabaseHeaders({
+"Content-Type":"application/json",
+"Prefer":"return=representation"
+}),
+
+body:JSON.stringify(ride)
+});
+
+if (!response.ok) {
+throw new Error(await response.text());
+}
+
+showToast("Ride successfully published to Cloud!");
+
+document.getElementById("postForm").reset();
+
+await renderRides();
+
+document.getElementById("rides").scrollIntoView({
+behavior:"smooth"
+});
+
+} catch(error) {
+
+console.error(error);
+
+showToast("Ride save failed: "+error.message);
+
+} finally {
+
+button.disabled = false;
+button.textContent = "Publish ride";
+
+}
+
+}
+
+// ======================================
+// GET RIDES FROM SUPABASE
+// ======================================
+
+async function getRides() {
+
+const response = await fetch(// ======================================
+// HELPER FUNCTIONS
+// ======================================
+
+function formatDate(d) {
+
+if(!d) return "Flexible date";
+
+const date = new Date(d);
+
+if(Number.isNaN(date.getTime())) {
+return String(d);
+}
+
+return date.toLocaleString("en-IN",{
+dateStyle:"medium",
+timeStyle:"short"
+});
+
+}
+
+function escapeHtml(s) {
+
+return String(s ?? "").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+
+}
+
+// ======================================
+// BOOKING MODAL
+// ======================================
+
+async function openBooking(id) {
+
+try {
+
+const rides = await getRides();
+
+const r = rides.find(x =>
+String(x.id) === String(id)
+);
+
+if(!r) {
+showToast("Ride not found");
+return;
+}
+
+if(Number(r.seats) < 1) {
+showToast("No seats currently available");
+return;
+}
+
+bookingRideId = r.id;
+
+document.getElementById("bookingInfo").innerHTML = `
+
+<p>
+<strong>
+${escapeHtml(r.from)} → ${escapeHtml(r.to)}
+</strong>
+</p>
+
+<p>
+${formatDate(r.date)}
+· ₹${Number(r.price)||0} per seat
+· ${Number(r.seats)||0} seats available
+</p>
+
+`;
+
+document.getElementById("bookingModal")
+.classList.add("show");
+
+} catch(error) {
+
+console.error(error);
+
+showToast("Could not open booking: "+error.message);
+
+}
+
+}
+
+// ======================================
+// CLOSE BOOKING
+// ======================================
+
+function closeBooking() {
+
+document.getElementById("bookingModal")
+.classList.remove("show");
+
+}
+
+// ======================================
+// SAVE BOOKING TO SUPABASE CLOUD
+// ======================================
+
+async function confirmBooking() {
+
+const name =
+document.getElementById("bookName").value.trim();
+
+const phone =
+document.getElementById("bookPhone").value.trim();
+
+const button =
+document.getElementById("bookingSubmit");
+
+if(!bookingRideId) {
+showToast("Please select a ride again");
+return;
+}
+
+if(!name || !phone) {
+showToast("Please enter name and mobile number");
+return;
+}
+
+if(!/^[6-9]\d{9}$/.test(phone)) {
+showToast("Enter valid 10-digit mobile number");
+return;
+}
+
+button.disabled = true;
+button.textContent = "Sending...";
+
+try {
+
+const response = await fetch(
+`${SUPABASE_URL}/rest/v1/booking_requests`,
+{
+method:"POST",
+
+headers:supabaseHeaders({
+"Content-Type":"application/json",
+"Prefer":"return=minimal"
+}),
+
+body:JSON.stringify({
+
+ride_id:bookingRideId,
+
+passenger_name:name,
+
+passenger_phone:phone,
+
+seats_requested:1,
+
+status:"pending"
+
+})
+
+});
+
+if(!response.ok) {
+throw new Error(await response.text());
+}
+
+closeBooking();
+
+document.getElementById("bookName").value = "";
+document.getElementById("bookPhone").value = "";
+
+showToast("Booking request saved to Cloud successfully!");
+
+} catch(error) {
+
+console.error("Cloud booking error:",error);
+
+showToast("Booking failed: "+error.message);
+
+} finally {
+
+button.disabled = false;
+button.textContent = "Send booking request";
+
+}
+
+}
+
+// ======================================
+// MY RIDES
+// ======================================
+
+async function showMyRides() {
+
+try {
+
+const rides = await getRides();
+
+alert(
+"RideMitra\n\n"+
+"Total cloud rides: "+rides.length+
+"\n\nDriver login is not yet available. "+
+"Personal ride history will be added with authentication."
+);
+
+} catch(error) {
+
+showToast("Unable to load My Rides: "+error.message);
+
+}
+
+}
+
+// ======================================
+// TOAST MESSAGE
+// ======================================
+
+function showToast(msg) {
+
+const t = document.getElementById("toast");
+
+t.textContent = msg;
+
+t.classList.add("show");
+
+clearTimeout(window.toastTimer);
+
+window.toastTimer = setTimeout(()=>{
+t.classList.remove("show");
+},4500);
+
+}
+
+// ======================================
+// INITIAL LOAD
+// ======================================
+
+renderRides();
+
+</script>
+
+</body>
+</html>
