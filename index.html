@@ -521,6 +521,8 @@ try {
     showToast(error.message || "Login failed.");
 }
 
+}
+ 
 async function logoutUser() {
     const {error} = await supabaseClient.auth.signOut();
     if (error) {
