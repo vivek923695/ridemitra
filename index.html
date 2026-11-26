@@ -1107,6 +1107,7 @@ async function confirmBooking() {
             .from("booking_requests")
             .insert([{
                 ride_id: selectedRide.id,
+                passenger_id: currentUser.id,
                 passenger_name: passengerName,
                 passenger_phone: passengerPhone,
                 seats_requested: 1,
