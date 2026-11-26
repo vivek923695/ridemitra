@@ -728,7 +728,7 @@ async function renderRides(options = {}) {
 
 // EDIT RIDE FUNCTION
 async function editRide(rideId) {
-
+alert("Edit Ride button working! ID: " + rideId);
     if (!currentUser || currentRole !== "driver") {
         showToast("Please login as Driver.");
         return;
