@@ -638,7 +638,6 @@ async function postRide(event) {
 </div>
 </section>
 
-
 <!-- =====================================
      24. ADMIN DASHBOARD
 ===================================== -->
@@ -659,4 +658,481 @@ async function postRide(event) {
 
             <button class="btn primary"
                 onclick="loadAdminStats()">
-                Refresh Stats                                  
+                Refresh Stats
+            </button>
+        </div>
+
+        <div id="adminStats" class="rides">
+
+            <div class="empty">
+                Loading Admin Statistics...
+            </div>
+
+        </div>
+
+        <div style="margin-top:25px">
+            <h3>Admin Account</h3>
+            <p id="adminEmail"></p>
+
+            <button class="btn outline"
+                onclick="closeAdminDashboard()">
+                Close Admin Panel
+            </button>
+        </div>
+
+    </div>
+
+</div>
+</section>
+
+
+<script>
+
+// =====================================
+// 25. OPEN USER DASHBOARD
+// =====================================
+
+async function openDashboard() {
+
+    if (!currentUser) {
+        showToast("Please login first.");
+        openLogin();
+        return;
+    }
+
+    const section = document.getElementById("dashboardSection");
+
+    section.style.display = "block";
+
+    section.scrollIntoView({
+        behavior:"smooth"
+    });
+
+    if (currentRole === "driver") {
+        await loadDriverBookings();
+    } else {
+        await loadPassengerBookings();
+    }
+}
+
+
+// =====================================
+// 26. DASHBOARD TABS
+// =====================================
+
+function showDashboardTab(type,button) {
+
+    document.querySelectorAll("#dashboardSection .tab")
+        .forEach(tab => tab.classList.remove("active"));
+
+    button.classList.add("active");
+
+    document.getElementById("driverDashboard").style.display =
+        type === "driver" ? "block" : "none";
+
+    document.getElementById("passengerDashboard").style.display =
+        type === "passenger" ? "block" : "none";
+
+    if (type === "driver") {
+        loadDriverBookings();
+    } else {
+        loadPassengerBookings();
+    }
+}
+
+
+// =====================================
+// 27. DRIVER BOOKINGS
+// =====================================
+
+async function loadDriverBookings() {
+
+    const box = document.getElementById("driverBookings");
+
+    if (!currentUser || currentRole !== "driver") {
+        box.innerHTML = "<p>Login with a driver account.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>Loading booking requests...</p>";
+
+    try {
+
+        const {data:rides,error:rideError} =
+            await supabaseClient
+                .from("rides")
+                .select("id,from_city,to_city")
+                .eq("owner_id",currentUser.id);
+
+        if (rideError) throw rideError;
+
+        const rideIds = (rides || []).map(ride => ride.id);
+
+        if (!rideIds.length) {
+            box.innerHTML = "<p>You have not posted any rides yet.</p>";
+            return;
+        }
+
+        const {data:bookings,error} =
+            await supabaseClient
+                .from("booking_requests")
+                .select("*")
+                .in("ride_id",rideIds)
+                .order("created_at",{ascending:false});
+
+        if (error) throw error;
+
+        if (!bookings || !bookings.length) {
+            box.innerHTML = "<p>No booking requests received yet.</p>";
+            return;
+        }
+
+        box.innerHTML = bookings.map(booking => {
+
+            const ride = rides.find(
+                item => Number(item.id) === Number(booking.ride_id)
+            );
+
+            const status = booking.status || "pending";
+
+            return `
+                <div class="ride-card" style="margin:12px 0">
+
+                    <h3>
+                    ${escapeHTML(ride?.from_city || "")}
+                    →
+                    ${escapeHTML(ride?.to_city || "")}
+                    </h3>
+
+                    <p><b>Passenger:</b>
+                    ${escapeHTML(booking.passenger_name)}</p>
+
+                    <p><b>Phone:</b>
+                    ${escapeHTML(booking.passenger_phone)}</p>
+
+                    <p><b>Seats:</b>
+                    ${Number(booking.seats_requested || 1)}</p>
+
+                    <p><b>Status:</b>
+                    ${escapeHTML(status.toUpperCase())}</p>
+
+                    ${
+                        status === "pending"
+                        ? `
+                        <button class="btn primary"
+                        onclick="acceptBooking(${Number(booking.id)})">
+                        Accept
+                        </button>
+
+                        <button class="btn outline"
+                        onclick="rejectBooking(${Number(booking.id)})">
+                        Reject
+                        </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+            `;
+
+        }).join("");
+
+    } catch(error) {
+
+        console.error(error);
+
+        box.innerHTML =
+            "<p>Dashboard error: " +
+            escapeHTML(error.message) + "</p>";
+
+    }
+}
+
+
+// =====================================
+// 28. ACCEPT BOOKING
+// =====================================
+
+async function acceptBooking(bookingId) {
+
+    if (!confirm("Accept this booking? One seat will be deducted.")) {
+        return;
+    }
+
+    try {
+
+        const {data,error} = await supabaseClient
+            .rpc("accept_booking",{
+                p_booking_id:bookingId
+            });
+
+        if (error) throw error;
+
+        showToast(data || "Booking accepted.");
+
+        await loadDriverBookings();
+        await renderRides();
+
+    } catch(error) {
+
+        console.error(error);
+
+        showToast("Accept failed: " + error.message);
+
+    }
+}
+
+
+// =====================================
+// 29. REJECT BOOKING
+// =====================================
+
+async function rejectBooking(bookingId) {
+
+    if (!confirm("Reject this booking request?")) {
+        return;
+    }
+
+    try {
+
+        const {data:booking,error:readError} =
+            await supabaseClient
+                .from("booking_requests")
+                .select("id,ride_id,status")
+                .eq("id",bookingId)
+                .single();
+
+        if (readError) throw readError;
+
+        if (booking.status !== "pending") {
+            throw new Error("Booking already processed.");
+        }
+
+        const {data:ride,error:rideError} =
+            await supabaseClient
+                .from("rides")
+                .select("owner_id")
+                .eq("id",booking.ride_id)
+                .single();
+
+        if (rideError) throw rideError;
+
+        if (ride.owner_id !== currentUser.id) {
+            throw new Error("Unauthorized.");
+        }
+
+        const {error} = await supabaseClient
+            .from("booking_requests")
+            .update({status:"rejected"})
+            .eq("id",bookingId)
+            .eq("status","pending");
+
+        if (error) throw error;
+
+        showToast("Booking rejected.");
+
+        await loadDriverBookings();
+
+    } catch(error) {
+
+        console.error(error);
+
+        showToast("Reject failed: " + error.message);
+
+    }
+}
+
+
+// =====================================
+// 30. PASSENGER BOOKING HISTORY
+// =====================================
+
+async function loadPassengerBookings() {
+
+    const box = document.getElementById("passengerBookings");
+
+    if (!currentUser) {
+        box.innerHTML = "<p>Please login first.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>Loading your bookings...</p>";
+
+    try {
+
+        const {data,error} = await supabaseClient
+            .from("booking_requests")
+            .select("*")
+            .eq("passenger_id",currentUser.id)
+            .order("created_at",{ascending:false});
+
+        if (error) throw error;
+
+        if (!data || !data.length) {
+            box.innerHTML = "<p>You have not booked any rides yet.</p>";
+            return;
+        }
+
+        box.innerHTML = data.map(booking => `
+
+            <div class="ride-card" style="margin:12px 0">
+
+                <h3>Booking #${Number(booking.id)}</h3>
+
+                <p><b>Passenger:</b>
+                ${escapeHTML(booking.passenger_name)}</p>
+
+                <p><b>Phone:</b>
+                ${escapeHTML(booking.passenger_phone)}</p>
+
+                <p><b>Status:</b>
+                ${escapeHTML(
+                    (booking.status || "pending").toUpperCase()
+                )}</p>
+
+                <p><b>Booking Date:</b>
+                ${formatDate(booking.created_at)}</p>
+
+            </div>
+
+        `).join("");
+
+    } catch(error) {
+
+        console.error(error);
+
+        box.innerHTML =
+            "<p>History error: " +
+            escapeHTML(error.message) + "</p>";
+
+    }
+}
+
+
+// =====================================
+// 31. OPEN ADMIN DASHBOARD
+// =====================================
+
+async function openAdminDashboard() {
+
+    if (!currentUser) {
+        showToast("Please login first.");
+        openLogin();
+        return;
+    }
+
+    const authorized = await checkAdminAccess();
+
+    if (!authorized) {
+        showToast("Unauthorized Admin Access!");
+        return;
+    }
+
+    document.getElementById("adminSection").style.display = "block";
+
+    document.getElementById("adminEmail").textContent =
+        currentUser.email;
+
+    document.getElementById("adminSection").scrollIntoView({
+        behavior:"smooth"
+    });
+
+    await loadAdminStats();
+}
+
+
+// =====================================
+// 32. LOAD ADMIN STATISTICS
+// =====================================
+
+async function loadAdminStats() {
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    const box = document.getElementById("adminStats");
+
+    box.innerHTML = `
+        <div class="empty">Loading statistics...</div>
+    `;
+
+    try {
+
+        const {data,error} = await supabaseClient
+            .rpc("get_admin_stats");
+
+        if (error) throw error;
+
+        const stats = [
+            ["Total Users",data.total_users,"👥"],
+            ["Drivers",data.total_drivers,"🚗"],
+            ["Passengers",data.total_passengers,"🧍"],
+            ["Total Rides",data.total_rides,"🛣️"],
+            ["Total Bookings",data.total_bookings,"📋"],
+            ["Pending",data.pending_bookings,"⏳"],
+            ["Accepted",data.accepted_bookings,"✅"],
+            ["Rejected",data.rejected_bookings,"❌"]
+        ];
+
+        box.innerHTML = stats.map(item => `
+
+            <div class="ride-card" style="text-align:center">
+
+                <div style="font-size:32px">${item[2]}</div>
+
+                <h2 style="color:var(--green)">
+                    ${Number(item[1] || 0)}
+                </h2>
+
+                <strong>${item[0]}</strong>
+
+            </div>
+
+        `).join("");
+
+        showToast("Admin statistics updated.");
+
+    } catch(error) {
+
+        console.error("Admin statistics error:",error);
+
+        box.innerHTML = `
+            <div class="empty">
+                <h3>Unable to load statistics</h3>
+                <p>${escapeHTML(error.message)}</p>
+            </div>
+        `;
+
+    }
+}
+
+
+// =====================================
+// 33. CLOSE ADMIN DASHBOARD
+// =====================================
+
+function closeAdminDashboard() {
+
+    document.getElementById("adminSection").style.display = "none";
+
+}
+
+
+// =====================================
+// 34. FINAL INITIALIZATION
+// =====================================
+
+window.addEventListener("load",async function() {
+
+    await loadCurrentUser();
+
+    await renderRides();
+
+});
+
+</script>
+
+</body>
+</html>
