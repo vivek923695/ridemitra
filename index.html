@@ -879,7 +879,6 @@ async function confirmBooking() {
     }
 
     const name = document.getElementById("bookName").value.trim();
-
     const phone = document.getElementById("bookPhone").value.trim();
 
     if (!name || !/^[0-9]{10}$/.test(phone)) {
@@ -888,11 +887,28 @@ async function confirmBooking() {
     }
 
     const button = document.getElementById("bookingSubmit");
-
     button.disabled = true;
-    button.textContent = "Sending...";
+    button.textContent = "Checking...";
 
     try {
+
+        // Check existing active booking
+        const { data: existing, error: checkError } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("id,status")
+                .eq("ride_id", selectedRide.id)
+                .eq("passenger_id", currentUser.id)
+                .in("status", ["pending", "accepted"]);
+
+        if (checkError) throw checkError;
+
+        if (existing && existing.length > 0) {
+            showToast("You have already booked this ride.");
+            return;
+        }
+
+        button.textContent = "Sending...";
 
         const { error } = await supabaseClient
             .from("booking_requests")
@@ -919,7 +935,6 @@ async function confirmBooking() {
     } catch(error) {
 
         console.error("Booking error:", error);
-
         showToast("Booking failed: " + error.message);
 
     } finally {
@@ -928,7 +943,6 @@ async function confirmBooking() {
         button.textContent = "Send booking request";
 
     }
-
 }
 </script>
 <!-- =====================================
