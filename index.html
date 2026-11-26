@@ -665,7 +665,13 @@ async function renderRides(options = {}) {
                     ${escapeHTML(ride.from_city)}
                     → ${escapeHTML(ride.to_city)}
                 </h3>
-
+${ride.vehicle_image_url ? `
+    <img
+        src="${escapeHTML(ride.vehicle_image_url)}"
+        alt="Vehicle Photo"
+        class="ride-photo"
+        onerror="this.style.display='none'">
+` : ""}
                 <p><b>Date:</b>
                     ${formatDate(ride.ride_date)}
                 </p>
