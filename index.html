@@ -467,7 +467,9 @@ async function loadCurrentUser() {
 
     currentUser = user || null;
 
-    currentRole = currentUser?.user_metadata?.role || null;
+    {
+  "role": "driver"
+}
 
     updateLoginUI();
 
