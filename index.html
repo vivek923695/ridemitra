@@ -866,7 +866,12 @@ function closeBooking() {
 
 // CONFIRM BOOKING
 
+let bookingSubmissionInProgress = false;
+
+// CONFIRM BOOKING
 async function confirmBooking() {
+
+    if (bookingSubmissionInProgress) return;
 
     if (!currentUser || currentRole !== "passenger") {
         showToast("Please login with Passenger account.");
@@ -887,12 +892,13 @@ async function confirmBooking() {
     }
 
     const button = document.getElementById("bookingSubmit");
+
+    bookingSubmissionInProgress = true;
     button.disabled = true;
     button.textContent = "Checking...";
 
     try {
 
-        // Check existing active booking
         const { data: existing, error: checkError } =
             await supabaseClient
                 .from("booking_requests")
@@ -939,6 +945,7 @@ async function confirmBooking() {
 
     } finally {
 
+        bookingSubmissionInProgress = false;
         button.disabled = false;
         button.textContent = "Send booking request";
 
