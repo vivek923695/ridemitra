@@ -349,7 +349,10 @@ and make every journey a little easier.
 <input id="authPassword" type="password" placeholder="Enter password">
 </div>
 
-<button class="btn primary full" onclick="signInUser()">Login</button>
+<button class="btn primary full"
+onclick="alert('Login button clicked'); if(typeof signInUser==='function'){signInUser();}else{alert('Login function not loaded');}">
+Login
+</button>
 <button class="btn outline full" onclick="signUpUser()">Create account</button>
 <button class="btn outline full" onclick="closeLogin()">Close</button>
 
