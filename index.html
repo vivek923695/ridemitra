@@ -442,113 +442,85 @@ async function loadCurrentUser() {
 }
 
 async function signUpUser() {
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
-    const role = document.getElementById("authRole").value;
+const email = document.getElementById("authEmail").value.trim();
+const password = document.getElementById("authPassword").value;
+const role = document.getElementById("authRole").value;
 
-    if (!email || !password) {
-        showToast("Please enter email and password.");
-        return;
-    }
-    if (password.length < 6) {
-        showToast("Password must be at least 6 characters.");
-        return;
-    }
-
-    try {
-    const loginPromise = supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-});
-
-const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error("Supabase response timeout - 12 seconds")), 12000);
-});
-
-const { data, error } = await Promise.race([
-    loginPromise,
-    timeoutPromise
-]);
-        if (error) throw error;
-
-        if (data.session) {
-            currentUser = data.user;
-            currentRole = role;
-            await checkAdminAccess();
-            updateLoginUI();
-            closeLogin();
-            showToast("Account created successfully!");
-            await loadCurrentUser();
-            await renderRides();
-        } else {
-            showToast("Account created. Please check your email if confirmation is required.");
-        }
-    } catch(error) {
-        console.error(error);
-        showToast(error.message || "Signup failed.");
-    }
+if (!email || !password) {
+    showToast("Please enter email and password.");
+    return;
 }
 
-async function signInUser() {
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
-
-    if (!email || !password) {
-        alert("Please enter email and password.");
-        return;
-    }
-
-    try {
-        alert("Connecting to Supabase...");
-
-        const { data, error } =
-            await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-        if (error) {
-            alert("LOGIN ERROR: " + error.message);
-            console.error(error);
-            return;
-        }
-
-        currentUser = data.user;
-        currentRole = currentUser.user_metadata?.role || null;
-
-        updateLoginUI();
-        closeLogin();
-
-        alert("Login successful!");
-
-        await renderRides();
-
-    } catch (error) {
-        alert("SYSTEM ERROR: " + error.message);
-        console.error(error);
-    }
+if (password.length < 6) {
+    showToast("Password must be at least 6 characters.");
+    return;
 }
-alert("LOGIN BUTTON WORKING");
-    const email = document.getElementById("authEmail").value.trim();
-    const password = document.getElementById("authPassword").value;
-    if (!email || !password) {
-        showToast("Please enter email and password.");
-        return;
-    }
-    try {
-        const {data,error} = await supabaseClient.auth.signInWithPassword({email,password});
-        if (error) throw error;
+
+try {
+    const { data, error } = await supabaseClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: { role: role }
+        }
+    });
+
+    if (error) throw error;
+
+    if (data.session && data.user) {
         currentUser = data.user;
-        currentRole = currentUser.user_metadata?.role || null;
+        currentRole = data.user.user_metadata?.role || role;
+
         await checkAdminAccess();
         updateLoginUI();
         closeLogin();
-        showToast("Login successful!");
+        showToast("Account created successfully!");
         await renderRides();
-    } catch(error) {
-        console.error(error);
-        showToast(error.message || "Login failed.");
+    } else {
+        showToast("Account created. Please verify your email, then login.");
     }
+
+} catch (error) {
+    console.error("Signup error:", error);
+    showToast(error.message || "Signup failed.");
+}
+
+}
+
+async function signInUser() {
+const email = document.getElementById("authEmail").value.trim();
+const password = document.getElementById("authPassword").value;
+
+if (!email || !password) {
+    showToast("Please enter email and password.");
+    return;
+}
+
+try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+
+    if (error) throw error;
+
+    currentUser = data.user;
+    currentRole = currentUser.user_metadata?.role || null;
+
+    await checkAdminAccess();
+    updateLoginUI();
+    closeLogin();
+
+    showToast("Login successful!");
+    await renderRides();
+
+    if (!currentRole) {
+        showToast("Account role is missing. Please contact admin.");
+    }
+
+} catch (error) {
+    console.error("Login error:", error);
+    showToast(error.message || "Login failed.");
 }
 
 async function logoutUser() {
