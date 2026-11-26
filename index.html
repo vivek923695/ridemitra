@@ -596,7 +596,122 @@ async function uploadVehiclePhoto(file) {
 
     return publicData.publicUrl;
 }
+// =====================================
+// LOAD AND DISPLAY RIDES FROM SUPABASE
+// =====================================
 
+async function renderRides(options = {}) {
+    const ridesBox = document.getElementById("rides");
+
+    if (!ridesBox) return;
+
+    ridesBox.innerHTML = '<div class="empty">Loading rides...</div>';
+
+    try {
+        let query = supabaseClient
+            .from("rides")
+            .select("*")
+            .order("ride_date", { ascending: true });
+
+        // Show only logged-in user's rides
+        if (options.myOnly) {
+            if (!currentUser) {
+                showToast("Please login first.");
+                openLogin();
+                return;
+            }
+
+            query = query.eq("owner_id", currentUser.id);
+        }
+
+        if (options.from) {
+            query = query.ilike("from_city", `%${options.from}%`);
+        }
+
+        if (options.to) {
+            query = query.ilike("to_city", `%${options.to}%`);
+        }
+
+        if (options.date) {
+            const nextDate = new Date(options.date + "T00:00:00");
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            const nextDateString =
+                nextDate.toISOString().slice(0, 10);
+
+            query = query
+                .gte("ride_date", options.date)
+                .lt("ride_date", nextDateString);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            ridesBox.innerHTML =
+                '<div class="empty">No rides found.</div>';
+            return;
+        }
+
+        ridesBox.innerHTML = data.map(ride => `
+            <div class="ride-card" style="margin:15px 0;padding:20px">
+                <h3>
+                    ${escapeHTML(ride.from_city)}
+                    → ${escapeHTML(ride.to_city)}
+                </h3>
+
+                <p><b>Date:</b>
+                    ${formatDate(ride.ride_date)}
+                </p>
+
+                <p><b>Driver:</b>
+                    ${escapeHTML(ride.driver_name)}
+                </p>
+
+                <p><b>Vehicle:</b>
+                    ${escapeHTML(ride.vehicle_details || "Not specified")}
+                </p>
+
+                <p><b>Available seats:</b>
+                    ${Number(ride.seats_available)}
+                </p>
+
+                <p><b>Price per seat:</b>
+                    ₹${Number(ride.price_per_seat)}
+                </p>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        console.error("Load rides error:", error);
+
+        ridesBox.innerHTML =
+            '<div class="empty">Unable to load rides. Please refresh.</div>';
+
+        showToast(error.message || "Unable to load rides.");
+    }
+}
+
+
+// SEARCH RIDES FUNCTION
+function searchRides(event) {
+    if (event) event.preventDefault();
+
+    const from =
+        document.getElementById("searchFrom")?.value.trim() ||
+        document.getElementById("filterFrom")?.value.trim() || "";
+
+    const to =
+        document.getElementById("searchTo")?.value.trim() ||
+        document.getElementById("filterTo")?.value.trim() || "";
+
+    const date =
+        document.getElementById("searchDate")?.value ||
+        document.getElementById("filterDate")?.value || "";
+
+    renderRides({ from, to, date });
+     }
 
 // =====================================
 // 12. POST NEW RIDE
@@ -759,16 +874,12 @@ function showMyRides() {
 
     const ridesSection = document.getElementById("rides");
 
-    if (ridesSection) {
-        ridesSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-    } else {
-        showToast("Rides section not found.");
-    }
+    ridesSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 
-    renderRides();
+    renderRides({ myOnly: true });
 }
 // =====================================
 // 25. OPEN USER DASHBOARD
