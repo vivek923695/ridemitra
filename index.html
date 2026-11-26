@@ -909,13 +909,17 @@ async function postRide(event) {
     const price = parseFloat(document.getElementById("postPrice").value);
     const driver = document.getElementById("postDriver").value.trim();
     const vehicle = document.getElementById("postVehicle").value.trim();
+    const photoFile = document.getElementById("postPhoto").files[0];
+    let photoUrl = null;
 
     if (!from || !to || !rideDate || !driver || seats < 1 || price < 0) {
         showToast("Please fill all required fields correctly.");
         return;
     }
 
-    try {
+    try {if (photoFile) {
+    photoUrl = await uploadVehiclePhoto(photoFile);
+    }
         const { data, error } = await supabaseClient
             .from("rides")
             .insert([{
@@ -926,7 +930,8 @@ async function postRide(event) {
                 seats_available: seats,
                 price_per_seat: price,
                 driver_name: driver,
-                vehicle_details: vehicle
+                vehicle_details: vehicle,
+vehicle_image_url: photoUrl
             }])
             .select();
 
