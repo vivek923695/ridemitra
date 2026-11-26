@@ -726,7 +726,89 @@ async function renderRides(options = {}) {
     }
 }
 
+// EDIT RIDE FUNCTION
+async function editRide(rideId) {
 
+    if (!currentUser || currentRole !== "driver") {
+        showToast("Please login as Driver.");
+        return;
+    }
+
+    try {
+
+        const { data: ride, error } = await supabaseClient
+            .from("rides")
+            .select("*")
+            .eq("id", rideId)
+            .eq("owner_id", currentUser.id)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!ride) {
+            showToast("Ride not found or unauthorized.");
+            return;
+        }
+
+        const from = prompt("Enter From City:", ride.from_city);
+        if (from === null) return;
+
+        const to = prompt("Enter To City:", ride.to_city);
+        if (to === null) return;
+
+        const date = prompt(
+            "Enter Ride Date and Time (YYYY-MM-DD HH:MM):",
+            ride.ride_date.replace("T", " ").slice(0, 16)
+        );
+        if (date === null) return;
+
+        const seats = prompt("Enter Available Seats:", ride.seats_available);
+        if (seats === null) return;
+
+        const price = prompt("Enter Price Per Seat:", ride.price_per_seat);
+        if (price === null) return;
+
+        const vehicle = prompt("Enter Vehicle Details:", ride.vehicle_details || "");
+        if (vehicle === null) return;
+
+        if (!from.trim() || !to.trim() ||
+            !Number.isInteger(Number(seats)) || Number(seats) < 0 ||
+            !Number.isFinite(Number(price)) || Number(price) < 0 ||
+            !date.trim()) {
+            showToast("Please enter valid ride details.");
+            return;
+        }
+
+        const { data: updated, error: updateError } = await supabaseClient
+            .from("rides")
+            .update({
+                from_city: from.trim(),
+                to_city: to.trim(),
+                ride_date: date.trim(),
+                seats_available: Number(seats),
+                price_per_seat: Number(price),
+                vehicle_details: vehicle.trim()
+            })
+            .eq("id", rideId)
+            .eq("owner_id", currentUser.id)
+            .select("id")
+            .maybeSingle();
+
+        if (updateError) throw updateError;
+
+        if (!updated) {
+            showToast("Ride update blocked. Check Supabase permissions.");
+            return;
+        }
+
+        showToast("Ride updated successfully!");
+        await renderRides({ myOnly: true });
+
+    } catch (error) {
+        console.error("Edit ride error:", error);
+        showToast("Edit failed: " + error.message);
+    }
+}
 // SEARCH RIDES FUNCTION
 function searchRides(event) {
     if (event) event.preventDefault();
