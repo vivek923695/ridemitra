@@ -685,6 +685,18 @@ async function renderRides(options = {}) {
                 <p><b>Price per seat:</b>
                     ₹${Number(ride.price_per_seat)}
                 </p>
+                ${currentUser &&
+  currentRole === "passenger" &&
+  Number(ride.seats_available) > 0 &&
+  ride.owner_id !== currentUser.id
+    ? `
+        <button class="btn primary full"
+            onclick="openBooking(${Number(ride.id)})">
+            Book Now
+        </button>
+      `
+    : ""
+                }
             </div>
         `).join("");
 
@@ -779,6 +791,145 @@ async function postRide(event) {
     }
 }
        </script>
+ // =====================================
+// RIDEMITRA BOOKING SYSTEM
+// =====================================
+
+async function openBooking(rideId) {
+
+    if (!currentUser) {
+        showToast("Please login first.");
+        openLogin();
+        return;
+    }
+
+    if (currentRole !== "passenger") {
+        showToast("Please login with Passenger account.");
+        return;
+    }
+
+    try {
+
+        const { data: ride, error } = await supabaseClient
+            .from("rides")
+            .select("id, owner_id, from_city, to_city, ride_date, seats_available, price_per_seat")
+            .eq("id", rideId)
+            .single();
+
+        if (error) throw error;
+
+        if (ride.owner_id === currentUser.id) {
+            showToast("You cannot book your own ride.");
+            return;
+        }
+
+        if (Number(ride.seats_available) < 1) {
+            showToast("No seats available.");
+            return;
+        }
+
+        selectedRide = ride;
+
+        document.getElementById("bookingInfo").innerHTML = `
+            <p><b>Route:</b>
+            ${escapeHTML(ride.from_city)}
+            → ${escapeHTML(ride.to_city)}</p>
+
+            <p><b>Price:</b>
+            ₹${Number(ride.price_per_seat)}</p>
+
+            <p><b>Available Seats:</b>
+            ${Number(ride.seats_available)}</p>
+        `;
+
+        document.getElementById("bookingModal").style.display = "flex";
+
+    } catch(error) {
+
+        console.error(error);
+        showToast("Unable to open booking: " + error.message);
+
+    }
+}
+
+
+// CLOSE BOOKING POPUP
+
+function closeBooking() {
+
+    document.getElementById("bookingModal").style.display = "none";
+
+    selectedRide = null;
+
+}
+
+
+// CONFIRM BOOKING
+
+async function confirmBooking() {
+
+    if (!currentUser || currentRole !== "passenger") {
+        showToast("Please login with Passenger account.");
+        return;
+    }
+
+    if (!selectedRide) {
+        showToast("Please select a ride.");
+        return;
+    }
+
+    const name = document.getElementById("bookName").value.trim();
+
+    const phone = document.getElementById("bookPhone").value.trim();
+
+    if (!name || !/^[0-9]{10}$/.test(phone)) {
+        showToast("Enter name and valid 10-digit mobile number.");
+        return;
+    }
+
+    const button = document.getElementById("bookingSubmit");
+
+    button.disabled = true;
+    button.textContent = "Sending...";
+
+    try {
+
+        const { error } = await supabaseClient
+            .from("booking_requests")
+            .insert([{
+                ride_id: selectedRide.id,
+                passenger_id: currentUser.id,
+                passenger_name: name,
+                passenger_phone: phone,
+                seats_requested: 1,
+                status: "pending"
+            }]);
+
+        if (error) throw error;
+
+        closeBooking();
+
+        document.getElementById("bookName").value = "";
+        document.getElementById("bookPhone").value = "";
+
+        showToast("Booking request sent successfully!");
+
+        await renderRides();
+
+    } catch(error) {
+
+        console.error("Booking error:", error);
+
+        showToast("Booking failed: " + error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Send booking request";
+
+    }
+
+}
 
 <!-- =====================================
      23. USER DASHBOARD
