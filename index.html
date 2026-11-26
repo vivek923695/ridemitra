@@ -26,7 +26,7 @@ header{background:white;border-bottom:1px solid var(--border);position:sticky;to
 .logo{display:flex;align-items:center;gap:10px;font-size:23px;font-weight:850;color:var(--navy);text-decoration:none}
 .logo-name b{color:var(--green)}
 .logo-tag{font-size:11px;color:var(--muted)}
-.nav-actions{display:flex;gap:10px}
+.nav-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .btn{border:0;border-radius:11px;padding:12px 17px;font-weight:750;cursor:pointer}
 .primary{background:var(--green);color:white}
 .primary:hover{background:var(--green2)}
@@ -64,6 +64,7 @@ main section{padding:48px 0}
 .panel-title{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
 .searchbar{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px}
 .rides{display:grid;grid-template-columns:repeat(3,1fr);gap:17px;margin-top:20px}
+#adminStats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .ride-card{padding:20px}
 .ride-top{display:flex;justify-content:space-between;gap:10px}
 .route{font-weight:850;color:var(--navy)}
@@ -89,13 +90,11 @@ main section{padding:48px 0}
 .searchbar{grid-template-columns:1fr 1fr}
 }
 @media(max-width:540px){
-.nav{height:65px}
+.nav{min-height:65px;height:auto;padding:8px 0;align-items:flex-start}
+.nav-actions{gap:6px}
+.nav-actions .btn{font-size:11px;padding:8px 9px}
 .logo{font-size:20px}
-.nav-actions .outline{
-    display:inline-block;
-    font-size:12px;
-    padding:8px;
-}
+.nav-actions .outline{display:inline-block;font-size:12px;padding:8px}
 .hero{padding:35px 0}
 .form-grid,.searchbar{grid-template-columns:1fr}
 .wide{grid-column:auto}
@@ -121,6 +120,7 @@ main section{padding:35px 0}
 <button class="btn outline" id="logoutNavButton" onclick="logoutUser()" style="display:none">Logout</button>
 <button class="btn outline" onclick="showMyRides()">My Rides</button>
 <button class="btn outline" onclick="openDashboard()">My Dashboard</button>
+<button class="btn outline" id="adminNavButton" onclick="openAdminDashboard()" style="display:none">Admin Panel</button>
 <button class="btn primary" onclick="openPost()">+ Offer a ride</button>
 </div>
 </div>
@@ -333,73 +333,42 @@ and make every journey a little easier.
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-   // =====================================
-// 1. SUPABASE CONNECTION
-// =====================================
-
 const SUPABASE_URL = "https://kokxrkrwdsogdtookepb.supabase.co";
-
 const SUPABASE_KEY = "sb_publishable_KraLjOOY3GBGeNJwbo-vFQ_njFkMSTS";
 
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let currentUser = null;
 let currentRole = null;
 let selectedRide = null;
 let allRides = [];
-
-// =====================================
-// 2. COMMON FUNCTIONS
-// =====================================
+let isRideMitraAdmin = false;
 
 function showToast(message) {
     const toast = document.getElementById("toast");
     toast.textContent = message;
     toast.classList.add("show");
-
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 3500);
+    setTimeout(() => toast.classList.remove("show"),3500);
 }
 
 function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
+    return String(value ?? "").replace(/[&<>"']/g,char => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
     })[char]);
 }
 
-function formatDate(dateValue) {
-    if (!dateValue) return "Date not available";
-
-    const date = new Date(dateValue);
-
-    if (isNaN(date.getTime())) return escapeHTML(dateValue);
-
-    return date.toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short"
-    });
+function formatDate(value) {
+    if (!value) return "Date not available";
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return escapeHTML(value);
+    return date.toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});
 }
 
-function setMode(mode, button) {
-    document.querySelectorAll(".tab").forEach(tab => {
-        tab.classList.remove("active");
-    });
-
+function setMode(mode,button) {
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
     if (button) button.classList.add("active");
-
-    document.getElementById("searchForm").style.display =
-        mode === "search" ? "grid" : "none";
-
-    document.getElementById("postForm").style.display =
-        mode === "post" ? "grid" : "none";
+    document.getElementById("searchForm").style.display = mode === "search" ? "grid" : "none";
+    document.getElementById("postForm").style.display = mode === "post" ? "grid" : "none";
 }
 
 function openPost() {
@@ -408,39 +377,28 @@ function openPost() {
         openLogin();
         return;
     }
-
     if (currentRole !== "driver") {
         showToast("Only driver accounts can offer rides.");
         return;
     }
-
-    setMode("post", document.querySelectorAll(".tab")[1]);
-
-    document.getElementById("postForm").scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
+    setMode("post",document.querySelectorAll(".tab")[1]);
+    document.getElementById("postForm").scrollIntoView({behavior:"smooth",block:"center"});
 }
-
-// =====================================
-// 3. LOGIN MODAL
-// =====================================
 
 function openLogin() {
     document.getElementById("authModal").classList.add("show");
 }
-
 function closeLogin() {
     document.getElementById("authModal").classList.remove("show");
 }
 
-// =====================================
-// 4. UPDATE LOGIN STATUS
-// =====================================
-
 function updateLoginUI() {
     const loginButton = document.getElementById("loginNavButton");
     const logoutButton = document.getElementById("logoutNavButton");
+    const adminButton = document.getElementById("adminNavButton");
+
+    if (adminButton) adminButton.style.display =
+        (currentUser && isRideMitraAdmin) ? "inline-block" : "none";
 
     if (currentUser) {
         loginButton.style.display = "none";
@@ -451,35 +409,37 @@ function updateLoginUI() {
     }
 }
 
-// =====================================
-// 5. GET CURRENT USER
-// =====================================
-
-async function loadCurrentUser() {
-    const {
-        data: { user },
-        error
-    } = await supabaseClient.auth.getUser();
-
-    if (error) {
-        console.error("User check:", error.message);
+async function checkAdminAccess() {
+    isRideMitraAdmin = false;
+    if (!currentUser) {
+        updateLoginUI();
+        return false;
     }
-
-currentUser = user || null;
-
-currentRole = currentUser?.user_metadata?.role || null;
-
-updateLoginUI();
-
-return currentUser;
+    try {
+        const {data,error} = await supabaseClient
+            .from("admin_users")
+            .select("user_id")
+            .eq("user_id",currentUser.id)
+            .maybeSingle();
+        if (error) throw error;
+        isRideMitraAdmin = !!data;
+    } catch(error) {
+        console.error("Admin access check:",error);
+        isRideMitraAdmin = false;
+    }
     updateLoginUI();
-
-    return currentUser;
+    return isRideMitraAdmin;
 }
 
-// =====================================
-// 6. SIGN UP
-// =====================================
+async function loadCurrentUser() {
+    const {data:{user},error} = await supabaseClient.auth.getUser();
+    if (error) console.error("User check:",error.message);
+    currentUser = user || null;
+    currentRole = currentUser?.user_metadata?.role || null;
+    await checkAdminAccess();
+    updateLoginUI();
+    return currentUser;
+}
 
 async function signUpUser() {
     const email = document.getElementById("authEmail").value.trim();
@@ -490,129 +450,85 @@ async function signUpUser() {
         showToast("Please enter email and password.");
         return;
     }
-
     if (password.length < 6) {
         showToast("Password must be at least 6 characters.");
         return;
     }
 
     try {
-        const { data, error } = await supabaseClient.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    role: role
-                }
-            }
+        const {data,error} = await supabaseClient.auth.signUp({
+            email,password,options:{data:{role}}
         });
-
         if (error) throw error;
 
         if (data.session) {
             currentUser = data.user;
             currentRole = role;
-
+            await checkAdminAccess();
             updateLoginUI();
             closeLogin();
-
             showToast("Account created successfully!");
-
             await loadCurrentUser();
             await renderRides();
         } else {
             showToast("Account created. Please check your email if confirmation is required.");
         }
-
-    } catch (error) {
+    } catch(error) {
         console.error(error);
         showToast(error.message || "Signup failed.");
     }
 }
 
-// =====================================
-// 7. LOGIN
-// =====================================
-
 async function signInUser() {
     const email = document.getElementById("authEmail").value.trim();
     const password = document.getElementById("authPassword").value;
-
     if (!email || !password) {
         showToast("Please enter email and password.");
         return;
     }
-
     try {
-        const { data, error } =
-            await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
+        const {data,error} = await supabaseClient.auth.signInWithPassword({email,password});
         if (error) throw error;
-
         currentUser = data.user;
         currentRole = currentUser.user_metadata?.role || null;
-
+        await checkAdminAccess();
         updateLoginUI();
         closeLogin();
-
         showToast("Login successful!");
-
         await renderRides();
-
-    } catch (error) {
+    } catch(error) {
         console.error(error);
         showToast(error.message || "Login failed.");
     }
 }
 
-// =====================================
-// 8. LOGOUT
-// =====================================
-
 async function logoutUser() {
-    const { error } = await supabaseClient.auth.signOut();
-
+    const {error} = await supabaseClient.auth.signOut();
     if (error) {
         showToast(error.message);
         return;
     }
-
     currentUser = null;
     currentRole = null;
-
+    isRideMitraAdmin = false;
     updateLoginUI();
-
+    document.getElementById("adminSection").style.display = "none";
     showToast("Logout successful.");
-
     await renderRides();
 }
 
-// =====================================
-// 9. AUTH SESSION LISTENER
-// =====================================
-
-supabaseClient.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event,session) => {
     currentUser = session?.user || null;
     currentRole = currentUser?.user_metadata?.role || null;
-
+    isRideMitraAdmin = false;
     updateLoginUI();
+    if (currentUser) setTimeout(() => checkAdminAccess(),0);
 });
 
-// =====================================
-// 10. INITIALIZE
-// =====================================
-
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded",async () => {
     await loadCurrentUser();
     await renderRides();
 });
-
-      </script>
-      <script>
-
 // =====================================
 // 11. UPLOAD VEHICLE PHOTO TO STORAGE
 // =====================================
@@ -679,514 +595,14 @@ async function postRide(event) {
         return;
     }
 
-    const from = document.getElementById("postFrom").value.trim();
-    const to = document.getElementById("postTo").value.trim();
-    const rideDate = document.getElementById("postDate").value;
-    const seats = Number(document.getElementById("postSeats").value);
-    const price = Number(document.getElementById("postPrice").value);
-    const driver = document.getElementById("postDriver").value.trim();
-    const vehicle = document.getElementById("postVehicle").value.trim();
+    const from = document.getElementById("post
+       </script>
 
-    const photoInput = document.getElementById("postPhoto");
-    const photoFile = photoInput.files[0];
-
-    if (!from || !to || !rideDate || !driver) {
-        showToast("Please fill all required fields.");
-        return;
-    }
-
-    if (from.toLowerCase() === to.toLowerCase()) {
-        showToast("Starting city and destination cannot be same.");
-        return;
-    }
-
-    if (seats < 1 || seats > 6 || price < 0) {
-        showToast("Please check seats and price.");
-        return;
-    }
-
-    const button = document.getElementById("publishRideButton");
-    button.disabled = true;
-    button.textContent = "Publishing...";
-
-    try {
-
-        // Upload photo first, if selected
-        let photoUrl = null;
-
-        if (photoFile) {
-            photoUrl = await uploadVehiclePhoto(photoFile);
-        }
-
-        // Save ride in Supabase database
-        const { data, error } = await supabaseClient
-            .from("rides")
-            .insert([{
-                from_city: from,
-                to_city: to,
-                ride_date: new Date(rideDate).toISOString(),
-                seats_available: seats,
-                price_per_seat: price,
-                driver_name: driver,
-                vehicle_details: vehicle,
-                vehicle_image_url: photoUrl,
-                owner_id: currentUser.id
-            }])
-            .select();
-
-        if (error) throw error;
-
-        showToast("Ride published successfully!");
-
-        document.getElementById("postForm").reset();
-
-        await renderRides();
-
-        setMode("search", document.querySelector(".tab"));
-
-        document.getElementById("rides").scrollIntoView({
-            behavior: "smooth"
-        });
-
-    } catch (error) {
-
-        console.error("Post ride error:", error);
-
-        showToast("Ride publish failed: " + error.message);
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "Publish ride";
-
-    }
-}
-
-
-// =====================================
-// 13. LOAD RIDES FROM SUPABASE CLOUD
-// =====================================
-
-async function getRides() {
-
-    const { data, error } = await supabaseClient
-        .from("rides")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Load rides error:", error);
-        throw error;
-    }
-
-    return data || [];
-}
-
-
-// =====================================
-// 14. DISPLAY RIDE CARDS
-// =====================================
-
-function displayRides(rides) {
-
-    const container = document.getElementById("rides");
-
-    if (!rides || rides.length === 0) {
-
-        container.innerHTML = `
-            <div class="empty">
-                <div style="font-size:40px">🚗</div>
-                <h3>No rides found</h3>
-                <p>Try another route or date.</p>
-            </div>
-        `;
-
-        return;
-    }
-
-    container.innerHTML = rides.map(ride => {
-
-        const photo = ride.vehicle_image_url
-            ? `<img class="ride-photo"
-                    src="${escapeHTML(ride.vehicle_image_url)}"
-                    alt="Vehicle photo"
-                    loading="lazy"
-                    onerror="this.style.display='none'">`
-            : "";
-
-        const seats = Number(ride.seats_available || 0);
-
-        return `
-            <div class="ride-card">
-
-                <div class="ride-top">
-                    <div class="route">
-                        ${escapeHTML(ride.from_city)}
-                        <span style="color:#19a875"> → </span>
-                        ${escapeHTML(ride.to_city)}
-                    </div>
-
-                    <div class="price">
-                        ₹${Number(ride.price_per_seat || 0)}
-                    </div>
-                </div>
-
-                ${photo}
-
-                <div class="ride-details">
-                    <span>📅 ${formatDate(ride.ride_date)}</span>
-                    <span>💺 ${seats} seats</span>
-                </div>
-
-                <div class="ride-details">
-                    <span>🚘 ${escapeHTML(ride.vehicle_details || "Vehicle details not provided")}</span>
-                </div>
-
-                <div class="driver">
-                    <div class="avatar">👤</div>
-                    <div>
-                        <strong>${escapeHTML(ride.driver_name || "Driver")}</strong>
-                        <small>RideMitra Driver</small>
-                    </div>
-                </div>
-
-                <button
-                    class="btn primary book"
-                    onclick="openBooking(${Number(ride.id)})"
-                    ${seats <= 0 ? "disabled" : ""}>
-                    ${seats <= 0 ? "No seats available" : "Request a seat"}
-                </button>
-
-            </div>
-        `;
-
-    }).join("");
-}
-
- // =====================================
-// 15. REFRESH RIDES
-// =====================================
-
-async function renderRides() {
-
-    const container = document.getElementById("rides");
-
-    container.innerHTML = `
-        <div class="empty">
-            Loading rides from cloud...
-        </div>
-    `;
-
-    try {
-
-        allRides = await getRides();
-
-        displayRides(allRides);
-
-    } catch (error) {
-
-        console.error(error);
-
-        container.innerHTML = `
-            <div class="empty">
-                <h3>Unable to load rides</h3>
-                <p>${escapeHTML(error.message)}</p>
-                <button class="btn primary"
-                    onclick="renderRides()">Try Again</button>
-            </div>
-        `;
-
-    }
-}
-
-
-// =====================================
-// 16. SEARCH AND FILTER RIDES
-// =====================================
-
-function searchRides(event) {
-
-    if (event) event.preventDefault();
-
-    const from = (
-        document.getElementById("filterFrom").value ||
-        document.getElementById("searchFrom").value
-    ).trim().toLowerCase();
-
-    const to = (
-        document.getElementById("filterTo").value ||
-        document.getElementById("searchTo").value
-    ).trim().toLowerCase();
-
-    const date = (
-        document.getElementById("filterDate").value ||
-        document.getElementById("searchDate").value
-    );
-
-    const seats = Number(
-        document.getElementById("searchSeats").value || 1
-    );
-
-    const filtered = allRides.filter(ride => {
-
-        const matchesFrom = !from ||
-            String(ride.from_city || "").toLowerCase().includes(from);
-
-        const matchesTo = !to ||
-            String(ride.to_city || "").toLowerCase().includes(to);
-
-        const matchesDate = !date ||
-            String(ride.ride_date || "").slice(0, 10) === date;
-
-        const matchesSeats =
-            Number(ride.seats_available || 0) >= seats;
-
-        return matchesFrom && matchesTo &&
-            matchesDate && matchesSeats;
-
-    });
-
-    displayRides(filtered);
-
-    document.getElementById("rides").scrollIntoView({
-        behavior: "smooth"
-    });
-}
-
-
-// =====================================
-// 17. MY RIDES
-// =====================================
-
-async function showMyRides() {
-
-    if (!currentUser) {
-        showToast("Please login to view your rides.");
-        openLogin();
-        return;
-    }
-
-    if (currentRole !== "driver") {
-        showToast("My Rides is available for driver accounts.");
-        return;
-    }
-
-    const container = document.getElementById("rides");
-
-    container.innerHTML = `
-        <div class="empty">Loading your rides...</div>
-    `;
-
-    try {
-
-        const { data, error } = await supabaseClient
-            .from("rides")
-            .select("*")
-            .eq("owner_id", currentUser.id)
-            .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        displayRides(data || []);
-
-        document.getElementById("rides").scrollIntoView({
-            behavior: "smooth"
-        });
-
-        showToast("Your rides loaded.");
-
-    } catch (error) {
-
-        console.error(error);
-        showToast("Unable to load My Rides: " + error.message);
-
-    }
-}
-
-                                         </script>
-        <script>
-
-// =====================================
-// 18. OPEN BOOKING FORM
-// =====================================
-
-function openBooking(rideId) {
-
-    if (!currentUser) {
-        showToast("Booking के लिए पहले Login करें।");
-        openLogin();
-        return;
-    }
-
-    selectedRide = allRides.find(
-        ride => Number(ride.id) === Number(rideId)
-    );
-
-    if (!selectedRide) {
-        showToast("Ride नहीं मिली। Refresh करके दोबारा कोशिश करें।");
-        return;
-    }
-
-    if (selectedRide.owner_id === currentUser.id) {
-        showToast("आप अपनी ही Ride Book नहीं कर सकते।");
-        return;
-    }
-
-    document.getElementById("bookingInfo").innerHTML = `
-        <p><strong>Route:</strong>
-        ${escapeHTML(selectedRide.from_city)}
-        → ${escapeHTML(selectedRide.to_city)}</p>
-
-        <p><strong>Price:</strong>
-        ₹${Number(selectedRide.price_per_seat || 0)} per seat</p>
-
-        <p><strong>Available Seats:</strong>
-        ${Number(selectedRide.seats_available || 0)}</p>
-    `;
-
-    document.getElementById("bookingModal").classList.add("show");
-}
-
-
-// =====================================
-// 19. CLOSE BOOKING FORM
-// =====================================
-
-function closeBooking() {
-
-    document.getElementById("bookingModal")
-        .classList.remove("show");
-
-    selectedRide = null;
-}
-
-
-// =====================================
-// 20. SEND BOOKING REQUEST
-// =====================================
-
-async function confirmBooking() {
-
-    if (!currentUser) {
-        showToast("Please login first.");
-        closeBooking();
-        openLogin();
-        return;
-    }
-
-    if (!selectedRide) {
-        showToast("Please select a ride again.");
-        closeBooking();
-        return;
-    }
-
-    const passengerName =
-        document.getElementById("bookName").value.trim();
-
-    const passengerPhone =
-        document.getElementById("bookPhone").value.trim();
-
-    if (!passengerName) {
-        showToast("Please enter your name.");
-        return;
-    }
-
-    if (!/^[6-9][0-9]{9}$/.test(passengerPhone)) {
-        showToast("Please enter a valid 10-digit mobile number.");
-        return;
-    }
-
-    if (Number(selectedRide.seats_available || 0) < 1) {
-        showToast("No seats available.");
-        closeBooking();
-        await renderRides();
-        return;
-    }
-
-    const button = document.getElementById("bookingSubmit");
-
-    button.disabled = true;
-    button.textContent = "Sending request...";
-
-    try {
-
-        const { data, error } = await supabaseClient
-            .from("booking_requests")
-            .insert([{
-                ride_id: selectedRide.id,
-                passenger_id: currentUser.id,
-                passenger_name: passengerName,
-                passenger_phone: passengerPhone,
-                seats_requested: 1,
-                status: "pending"
-            }])
-            .select();
-
-        if (error) throw error;
-
-        showToast("Booking request sent successfully!");
-
-        document.getElementById("bookName").value = "";
-        document.getElementById("bookPhone").value = "";
-
-        closeBooking();
-
-    } catch (error) {
-
-        console.error("Booking error:", error);
-
-        showToast("Booking failed: " + error.message);
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "Send booking request";
-
-    }
-}
-
-
-// =====================================
-// 21. REFRESH AUTH AND RIDES
-// =====================================
-
-async function refreshRideMitra() {
-
-    await loadCurrentUser();
-
-    await renderRides();
-
-}
-
-
-// =====================================
-// 22. CLOSE MODALS ON BACKGROUND CLICK
-// =====================================
-
-document.getElementById("authModal")
-    .addEventListener("click", function(event) {
-
-        if (event.target === this) {
-            closeLogin();
-        }
-
-    });
-
-document.getElementById("bookingModal")
-    .addEventListener("click", function(event) {
-
-        if (event.target === this) {
-            closeBooking();
-        }
-
-    });
-
-</script>
 <!-- =====================================
-     RIDEMITRA DASHBOARD
+     23. USER DASHBOARD
 ===================================== -->
 
-<section id="dashboardSection" style="display:none">
+<section id="dashboardSection" style="display:none;padding:40px 0">
 <div class="container">
 
     <div class="heading">
@@ -1210,332 +626,37 @@ document.getElementById("bookingModal")
 
         <div id="driverDashboard">
             <h3>Booking Requests Received</h3>
-            <div id="driverBookings">
-                Loading...
-            </div>
+            <div id="driverBookings">Loading...</div>
         </div>
 
         <div id="passengerDashboard" style="display:none">
             <h3>My Booking History</h3>
-            <div id="passengerBookings">
-                Loading...
-            </div>
+            <div id="passengerBookings">Loading...</div>
         </div>
 
     </div>
 </div>
 </section>
 
-<script>
 
-// =====================================
-// 1. SHOW DASHBOARD
-// =====================================
+<!-- =====================================
+     24. ADMIN DASHBOARD
+===================================== -->
 
-async function openDashboard() {
+<section id="adminSection" style="display:none;padding:40px 0;background:#eef7f4">
 
-    if (!currentUser) {
-        showToast("Please login first.");
-        openLogin();
-        return;
-    }
+<div class="container">
 
-    const section = document.getElementById("dashboardSection");
+    <div class="heading">
+        <h2>🚀 RideMitra Admin Panel</h2>
+        <p>Website overview and management statistics.</p>
+    </div>
 
-    section.style.display = "block";
+    <div class="panel">
 
-    section.scrollIntoView({
-        behavior: "smooth"
-    });
+        <div class="panel-title">
+            <h2>Dashboard Overview</h2>
 
-    if (currentRole === "driver") {
-        await loadDriverBookings();
-    } else {
-        await loadPassengerBookings();
-    }
-}
-
-
-// =====================================
-// 2. DASHBOARD TABS
-// =====================================
-
-function showDashboardTab(type, button) {
-
-    document.querySelectorAll("#dashboardSection .tab")
-        .forEach(tab => tab.classList.remove("active"));
-
-    button.classList.add("active");
-
-    document.getElementById("driverDashboard").style.display =
-        type === "driver" ? "block" : "none";
-
-    document.getElementById("passengerDashboard").style.display =
-        type === "passenger" ? "block" : "none";
-
-    if (type === "driver") {
-        loadDriverBookings();
-    } else {
-        loadPassengerBookings();
-    }
-}
-
-
-// =====================================
-// 3. LOAD DRIVER BOOKINGS
-// =====================================
-
-async function loadDriverBookings() {
-
-    const box = document.getElementById("driverBookings");
-
-    if (!currentUser || currentRole !== "driver") {
-        box.innerHTML = "<p>Login with a driver account.</p>";
-        return;
-    }
-
-    box.innerHTML = "<p>Loading booking requests...</p>";
-
-    try {
-
-        const { data: rides, error: rideError } =
-            await supabaseClient
-                .from("rides")
-                .select("id,from_city,to_city")
-                .eq("owner_id", currentUser.id);
-
-        if (rideError) throw rideError;
-
-        const rideIds = (rides || []).map(ride => ride.id);
-
-        if (!rideIds.length) {
-            box.innerHTML = "<p>You have not posted any rides yet.</p>";
-            return;
-        }
-
-        const { data: bookings, error } =
-            await supabaseClient
-                .from("booking_requests")
-                .select("*")
-                .in("ride_id", rideIds)
-                .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        if (!bookings || !bookings.length) {
-            box.innerHTML = "<p>No booking requests received yet.</p>";
-            return;
-        }
-
-        box.innerHTML = bookings.map(booking => {
-
-            const ride = rides.find(
-                item => Number(item.id) === Number(booking.ride_id)
-            );
-
-            const status = booking.status || "pending";
-
-            return `
-                <div class="ride-card" style="margin:12px 0">
-
-                    <h3>
-                    ${escapeHTML(ride?.from_city || "")}
-                    →
-                    ${escapeHTML(ride?.to_city || "")}
-                    </h3>
-
-                    <p><b>Passenger:</b>
-                    ${escapeHTML(booking.passenger_name)}</p>
-
-                    <p><b>Phone:</b>
-                    ${escapeHTML(booking.passenger_phone)}</p>
-
-                    <p><b>Seats requested:</b>
-                    ${Number(booking.seats_requested || 1)}</p>
-
-                    <p><b>Status:</b>
-                    ${escapeHTML(status.toUpperCase())}</p>
-
-                    ${
-                        status === "pending"
-                        ? `
-                        <button class="btn primary"
-                        onclick="acceptBooking(${Number(booking.id)})">
-                        Accept
-                        </button>
-
-                        <button class="btn outline"
-                        onclick="rejectBooking(${Number(booking.id)})">
-                        Reject
-                        </button>
-                        `
-                        : ""
-                    }
-
-                </div>
-            `;
-
-        }).join("");
-
-    } catch (error) {
-
-        console.error(error);
-        box.innerHTML =
-            "<p>Dashboard error: " + escapeHTML(error.message) + "</p>";
-
-    }
-}
-
-
-// =====================================
-// 4. ACCEPT BOOKING
-// =====================================
-
-async function acceptBooking(bookingId) {
-
-    if (!confirm("Accept this booking? One seat will be deducted.")) {
-        return;
-    }
-
-    try {
-
-        const { data, error } = await supabaseClient
-            .rpc("accept_booking", {
-                p_booking_id: bookingId
-            });
-
-        if (error) throw error;
-
-        showToast(data || "Booking accepted.");
-
-        await loadDriverBookings();
-        await renderRides();
-
-    } catch (error) {
-
-        console.error(error);
-        showToast("Accept failed: " + error.message);
-
-    }
-}
-
-
-// =====================================
-// 5. REJECT BOOKING
-// =====================================
-
-async function rejectBooking(bookingId) {
-
-    if (!confirm("Reject this booking request?")) {
-        return;
-    }
-
-    try {
-
-        const { data: booking, error: readError } =
-            await supabaseClient
-                .from("booking_requests")
-                .select("id,ride_id")
-                .eq("id", bookingId)
-                .single();
-
-        if (readError) throw readError;
-
-        const { data: ride, error: rideError } =
-            await supabaseClient
-                .from("rides")
-                .select("owner_id")
-                .eq("id", booking.ride_id)
-                .single();
-
-        if (rideError) throw rideError;
-
-        if (ride.owner_id !== currentUser.id) {
-            throw new Error("You are not the ride owner.");
-        }
-
-        const { error } = await supabaseClient
-            .from("booking_requests")
-            .update({ status: "rejected" })
-            .eq("id", bookingId)
-            .eq("status", "pending");
-
-        if (error) throw error;
-
-        showToast("Booking rejected.");
-
-        await loadDriverBookings();
-
-    } catch (error) {
-
-        console.error(error);
-        showToast("Reject failed: " + error.message);
-
-    }
-}
-
-
-// =====================================
-// 6. PASSENGER BOOKING HISTORY
-// =====================================
-
-async function loadPassengerBookings() {
-
-    const box = document.getElementById("passengerBookings");
-
-    if (!currentUser) {
-        box.innerHTML = "<p>Please login first.</p>";
-        return;
-    }
-
-    box.innerHTML = "<p>Loading your bookings...</p>";
-
-    try {
-
-        const { data, error } = await supabaseClient
-            .from("booking_requests")
-            .select("*")
-            .eq("passenger_id", currentUser.id)
-            .order("created_at", { ascending: false });
-
-        if (error) throw error;
-
-        if (!data || !data.length) {
-            box.innerHTML = "<p>You have not booked any rides yet.</p>";
-            return;
-        }
-
-        box.innerHTML = data.map(booking => `
-            <div class="ride-card" style="margin:12px 0">
-
-                <h3>Booking #${Number(booking.id)}</h3>
-
-                <p><b>Passenger:</b>
-                ${escapeHTML(booking.passenger_name)}</p>
-
-                <p><b>Phone:</b>
-                ${escapeHTML(booking.passenger_phone)}</p>
-
-                <p><b>Status:</b>
-                ${escapeHTML(
-                    (booking.status || "pending").toUpperCase()
-                )}</p>
-
-                <p><b>Booking Date:</b>
-                ${formatDate(booking.created_at)}</p>
-
-            </div>
-        `).join("");
-
-    } catch (error) {
-
-        console.error(error);
-        box.innerHTML =
-            "<p>History error: " + escapeHTML(error.message) + "</p>";
-
-    }
-}
-
-</script>
-</body>
-</html>                                 
+            <button class="btn primary"
+                onclick="loadAdminStats()">
+                Refresh Stats                                  
