@@ -697,6 +697,22 @@ async function renderRides(options = {}) {
       `
     : ""
                 }
+                ${currentUser &&
+                  currentRole === "driver" &&
+                  ride.owner_id === currentUser.id
+                    ? `
+                        <button class="btn primary full"
+                            onclick="editRide(${Number(ride.id)})">
+                            Edit Ride
+                        </button>
+
+                        <button class="btn outline full"
+                            onclick="deleteRide(${Number(ride.id)})">
+                            Delete Ride
+                        </button>
+                      `
+                    : ""
+                }
             </div>
         `).join("");
 
