@@ -480,6 +480,44 @@ async function signUpUser() {
 }
 
 async function signInUser() {
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+
+    if (!email || !password) {
+        alert("Please enter email and password.");
+        return;
+    }
+
+    try {
+        alert("Connecting to Supabase...");
+
+        const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+        if (error) {
+            alert("LOGIN ERROR: " + error.message);
+            console.error(error);
+            return;
+        }
+
+        currentUser = data.user;
+        currentRole = currentUser.user_metadata?.role || null;
+
+        updateLoginUI();
+        closeLogin();
+
+        alert("Login successful!");
+
+        await renderRides();
+
+    } catch (error) {
+        alert("SYSTEM ERROR: " + error.message);
+        console.error(error);
+    }
+}
 alert("LOGIN BUTTON WORKING");
     const email = document.getElementById("authEmail").value.trim();
     const password = document.getElementById("authPassword").value;
