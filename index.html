@@ -749,7 +749,27 @@ async function postRide(event) {
 
 
 <script>
+// MY RIDES BUTTON FIX
+function showMyRides() {
+    if (!currentUser) {
+        showToast("Please login first.");
+        openLogin();
+        return;
+    }
 
+    const ridesSection = document.getElementById("ridesSection");
+
+    if (ridesSection) {
+        ridesSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    } else {
+        showToast("Rides section not found.");
+    }
+
+    renderRides();
+}
 // =====================================
 // 25. OPEN USER DASHBOARD
 // =====================================
