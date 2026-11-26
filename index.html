@@ -1313,6 +1313,10 @@ async function rejectBooking(bookingId) {
 // MY BOOKINGS DASHBOARD V2
 // =====================================
 
+// =====================================
+// MY BOOKINGS WITH EDIT AND CANCEL
+// =====================================
+
 async function loadPassengerBookings() {
 
     const box = document.getElementById("passengerBookings");
@@ -1322,72 +1326,60 @@ async function loadPassengerBookings() {
         return;
     }
 
-    box.innerHTML = "<p>Loading your bookings...</p>";
+    box.innerHTML = "<p>Loading bookings...</p>";
 
     try {
 
-        const { data: bookings, error: bookingError } =
-            await supabaseClient
-                .from("booking_requests")
-                .select("id, ride_id, passenger_name, seats_requested, status, created_at")
-                .eq("passenger_id", currentUser.id)
-                .order("created_at", { ascending: false });
+        const { data: bookings, error } = await supabaseClient
+            .from("booking_requests")
+            .select("id, ride_id, passenger_name, passenger_phone, seats_requested, status, created_at")
+            .eq("passenger_id", currentUser.id)
+            .order("created_at", { ascending: false });
 
-        if (bookingError) throw bookingError;
+        if (error) throw error;
 
         if (!bookings || bookings.length === 0) {
-            box.innerHTML = `
-                <div class="empty">
-                    No booking history found.
-                </div>
-            `;
+            box.innerHTML = "<p>No booking history found.</p>";
             return;
         }
 
-        const rideIds = [
-            ...new Set(bookings.map(b => b.ride_id).filter(Boolean))
-        ];
+        const rideIds = [...new Set(
+            bookings.map(b => b.ride_id).filter(Boolean)
+        )];
 
         let rides = [];
 
-        if (rideIds.length > 0) {
-
-            const { data: rideData, error: rideError } =
-                await supabaseClient
-                    .from("rides")
-                    .select(`
-                        id,
-                        from_city,
-                        to_city,
-                        ride_date,
-                        driver_name,
-                        vehicle_details,
-                        price_per_seat
-                    `)
-                    .in("id", rideIds);
+        if (rideIds.length) {
+            const { data, error: rideError } = await supabaseClient
+                .from("rides")
+                .select("id, from_city, to_city, ride_date, driver_name, vehicle_details, price_per_seat")
+                .in("id", rideIds);
 
             if (rideError) throw rideError;
-
-            rides = rideData || [];
+            rides = data || [];
         }
 
         box.innerHTML = bookings.map(booking => {
 
             const ride = rides.find(
-                item => Number(item.id) === Number(booking.ride_id)
+                r => Number(r.id) === Number(booking.ride_id)
             );
 
-            const status = (
-                booking.status || "pending"
-            ).toUpperCase();
+            const status = (booking.status || "pending").toLowerCase();
 
-            const statusColor =
-                status === "ACCEPTED" ? "#16865d" :
-                status === "REJECTED" ? "#c0392b" :
-                "#b7791f";
+            const actions = status === "pending" ? `
+                <button class="btn primary full"
+                    onclick="editPassengerBooking(${Number(booking.id)})">
+                    Edit Booking
+                </button>
+
+                <button class="btn outline full"
+                    onclick="cancelPassengerBooking(${Number(booking.id)})">
+                    Cancel Booking
+                </button>
+            ` : "";
 
             return `
-
                 <div class="ride-card" style="margin:12px 0">
 
                     <h3>Booking #${Number(booking.id)}</h3>
@@ -1398,63 +1390,135 @@ async function loadPassengerBookings() {
                         ${escapeHTML(ride?.to_city || "Route unavailable")}
                     </h3>
 
-                    <p>
-                        <b>Driver:</b>
+                    <p><b>Driver:</b>
                         ${escapeHTML(ride?.driver_name || "Not available")}
                     </p>
 
-                    <p>
-                        <b>Vehicle:</b>
+                    <p><b>Vehicle:</b>
                         ${escapeHTML(ride?.vehicle_details || "Not available")}
                     </p>
 
-                    <p>
-                        <b>Travel Date:</b>
-                        ${ride?.ride_date
-                            ? formatDate(ride.ride_date)
-                            : "Not available"}
+                    <p><b>Travel Date:</b>
+                        ${ride?.ride_date ? formatDate(ride.ride_date) : "Not available"}
                     </p>
 
-                    <p>
-                        <b>Seats Booked:</b>
+                    <p><b>Passenger:</b>
+                        ${escapeHTML(booking.passenger_name)}
+                    </p>
+
+                    <p><b>Phone:</b>
+                        ${escapeHTML(booking.passenger_phone)}
+                    </p>
+
+                    <p><b>Seats:</b>
                         ${Number(booking.seats_requested || 1)}
                     </p>
 
-                    <p>
-                        <b>Price Per Seat:</b>
+                    <p><b>Price:</b>
                         ${ride?.price_per_seat != null
-                            ? "₹" + Number(ride.price_per_seat).toLocaleString("en-IN")
+                            ? "₹" + Number(ride.price_per_seat)
                             : "Not available"}
                     </p>
 
-                    <p>
-                        <b>Status:</b>
-                        <strong style="color:${statusColor}">
-                            ${escapeHTML(status)}
-                        </strong>
+                    <p><b>Status:</b>
+                        <strong>${escapeHTML(status.toUpperCase())}</strong>
                     </p>
 
-                    <p>
-                        <b>Booking Date:</b>
+                    <p><b>Booking Date:</b>
                         ${formatDate(booking.created_at)}
                     </p>
 
-                </div>
+                    ${actions}
 
+                </div>
             `;
 
         }).join("");
 
     } catch (error) {
 
-        console.error("Booking History Error:", error);
-
-        box.innerHTML =
-            "<p>History error: " +
-            escapeHTML(error.message) +
-            "</p>";
+        console.error(error);
+        box.innerHTML = "<p>Booking history error: " +
+            escapeHTML(error.message) + "</p>";
 
     }
+}
+
+
+// EDIT PENDING BOOKING
+
+async function editPassengerBooking(id) {
+
+    const { data: booking, error } = await supabaseClient
+        .from("booking_requests")
+        .select("id, passenger_name, passenger_phone, status")
+        .eq("id", id)
+        .eq("passenger_id", currentUser.id)
+        .single();
+
+    if (error) {
+        showToast(error.message);
+        return;
+    }
+
+    if (booking.status !== "pending") {
+        showToast("Only pending bookings can be edited.");
+        return;
+    }
+
+    const name = prompt("Enter passenger name:", booking.passenger_name);
+    if (name === null) return;
+
+    const phone = prompt("Enter 10-digit mobile number:", booking.passenger_phone);
+    if (phone === null) return;
+
+    if (!name.trim() || !/^[0-9]{10}$/.test(phone.trim())) {
+        showToast("Enter valid name and mobile number.");
+        return;
+    }
+
+    const { error: updateError } = await supabaseClient
+        .from("booking_requests")
+        .update({
+            passenger_name: name.trim(),
+            passenger_phone: phone.trim()
+        })
+        .eq("id", id)
+        .eq("passenger_id", currentUser.id)
+        .eq("status", "pending");
+
+    if (updateError) {
+        showToast("Edit failed: " + updateError.message);
+        return;
+    }
+
+    showToast("Booking updated successfully!");
+    await loadPassengerBookings();
+}
+
+
+// CANCEL PENDING BOOKING
+
+async function cancelPassengerBooking(id) {
+
+    if (!confirm("Are you sure you want to cancel this booking?")) {
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("booking_requests")
+        .update({ status: "cancelled" })
+        .eq("id", id)
+        .eq("passenger_id", currentUser.id)
+        .eq("status", "pending");
+
+    if (error) {
+        showToast("Cancel failed: " + error.message);
+        return;
+    }
+
+    showToast("Booking cancelled successfully!");
+    await loadPassengerBookings();
 }
 
 // =====================================
