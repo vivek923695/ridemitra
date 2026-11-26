@@ -1477,7 +1477,7 @@ async function editPassengerBooking(id) {
         .select("id, passenger_name, passenger_phone, status")
         .eq("id", id)
         .eq("passenger_id", currentUser.id)
-        .maybesingle();
+        .maybeSingle();
 
     if (error) {
         showToast("Booking error: " + error.message);
