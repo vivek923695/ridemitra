@@ -809,6 +809,61 @@ alert("Edit Ride button working! ID: " + rideId);
         showToast("Edit failed: " + error.message);
     }
 }
+ // DELETE RIDE FUNCTION
+async function deleteRide(rideId) {
+
+    if (!currentUser || currentRole !== "driver") {
+        showToast("Please login as Driver.");
+        return;
+    }
+
+    if (!confirm("Are you sure you want to delete this ride?")) {
+        return;
+    }
+
+    try {
+
+        // Check whether this ride has booking history
+        const { data: bookings, error: checkError } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("id")
+                .eq("ride_id", rideId)
+                .limit(1);
+
+        if (checkError) throw checkError;
+
+        if (bookings && bookings.length > 0) {
+            showToast("Cannot delete ride with booking history.");
+            return;
+        }
+
+        const { data, error } = await supabaseClient
+            .from("rides")
+            .delete()
+            .eq("id", rideId)
+            .eq("owner_id", currentUser.id)
+            .select("id")
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+            showToast("Delete blocked. Check permissions.");
+            return;
+        }
+
+        showToast("Ride deleted successfully!");
+
+        await renderRides({ myOnly: true });
+
+    } catch (error) {
+
+        console.error("Delete ride error:", error);
+        showToast("Delete failed: " + error.message);
+
+    }
+}
 // SEARCH RIDES FUNCTION
 function searchRides(event) {
     if (event) event.preventDefault();
