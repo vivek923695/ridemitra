@@ -1140,6 +1140,10 @@ async function rejectBooking(bookingId) {
 // 30. PASSENGER BOOKING HISTORY
 // =====================================
 
+// =====================================
+// MY BOOKINGS DASHBOARD V2
+// =====================================
+
 async function loadPassengerBookings() {
 
     const box = document.getElementById("passengerBookings");
@@ -1153,54 +1157,136 @@ async function loadPassengerBookings() {
 
     try {
 
-        const {data,error} = await supabaseClient
-            .from("booking_requests")
-            .select("*")
-            .eq("passenger_id",currentUser.id)
-            .order("created_at",{ascending:false});
+        const { data: bookings, error: bookingError } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("id, ride_id, passenger_name, seats_requested, status, created_at")
+                .eq("passenger_id", currentUser.id)
+                .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (bookingError) throw bookingError;
 
-        if (!data || !data.length) {
-            box.innerHTML = "<p>You have not booked any rides yet.</p>";
+        if (!bookings || bookings.length === 0) {
+            box.innerHTML = `
+                <div class="empty">
+                    No booking history found.
+                </div>
+            `;
             return;
         }
 
-        box.innerHTML = data.map(booking => `
+        const rideIds = [
+            ...new Set(bookings.map(b => b.ride_id).filter(Boolean))
+        ];
 
-            <div class="ride-card" style="margin:12px 0">
+        let rides = [];
 
-                <h3>Booking #${Number(booking.id)}</h3>
+        if (rideIds.length > 0) {
 
-                <p><b>Passenger:</b>
-                ${escapeHTML(booking.passenger_name)}</p>
+            const { data: rideData, error: rideError } =
+                await supabaseClient
+                    .from("rides")
+                    .select(`
+                        id,
+                        from_city,
+                        to_city,
+                        ride_date,
+                        driver_name,
+                        vehicle_details,
+                        price_per_seat
+                    `)
+                    .in("id", rideIds);
 
-                <p><b>Phone:</b>
-                ${escapeHTML(booking.passenger_phone)}</p>
+            if (rideError) throw rideError;
 
-                <p><b>Status:</b>
-                ${escapeHTML(
-                    (booking.status || "pending").toUpperCase()
-                )}</p>
+            rides = rideData || [];
+        }
 
-                <p><b>Booking Date:</b>
-                ${formatDate(booking.created_at)}</p>
+        box.innerHTML = bookings.map(booking => {
 
-            </div>
+            const ride = rides.find(
+                item => Number(item.id) === Number(booking.ride_id)
+            );
 
-        `).join("");
+            const status = (
+                booking.status || "pending"
+            ).toUpperCase();
 
-    } catch(error) {
+            const statusColor =
+                status === "ACCEPTED" ? "#16865d" :
+                status === "REJECTED" ? "#c0392b" :
+                "#b7791f";
 
-        console.error(error);
+            return `
+
+                <div class="ride-card" style="margin:12px 0">
+
+                    <h3>Booking #${Number(booking.id)}</h3>
+
+                    <h3>
+                        ${escapeHTML(ride?.from_city || "Route unavailable")}
+                        →
+                        ${escapeHTML(ride?.to_city || "Route unavailable")}
+                    </h3>
+
+                    <p>
+                        <b>Driver:</b>
+                        ${escapeHTML(ride?.driver_name || "Not available")}
+                    </p>
+
+                    <p>
+                        <b>Vehicle:</b>
+                        ${escapeHTML(ride?.vehicle_details || "Not available")}
+                    </p>
+
+                    <p>
+                        <b>Travel Date:</b>
+                        ${ride?.ride_date
+                            ? formatDate(ride.ride_date)
+                            : "Not available"}
+                    </p>
+
+                    <p>
+                        <b>Seats Booked:</b>
+                        ${Number(booking.seats_requested || 1)}
+                    </p>
+
+                    <p>
+                        <b>Price Per Seat:</b>
+                        ${ride?.price_per_seat != null
+                            ? "₹" + Number(ride.price_per_seat).toLocaleString("en-IN")
+                            : "Not available"}
+                    </p>
+
+                    <p>
+                        <b>Status:</b>
+                        <strong style="color:${statusColor}">
+                            ${escapeHTML(status)}
+                        </strong>
+                    </p>
+
+                    <p>
+                        <b>Booking Date:</b>
+                        ${formatDate(booking.created_at)}
+                    </p>
+
+                </div>
+
+            `;
+
+        }).join("");
+
+    } catch (error) {
+
+        console.error("Booking History Error:", error);
 
         box.innerHTML =
             "<p>History error: " +
-            escapeHTML(error.message) + "</p>";
+            escapeHTML(error.message) +
+            "</p>";
 
     }
 }
-
 
 // =====================================
 // 31. OPEN ADMIN DASHBOARD
