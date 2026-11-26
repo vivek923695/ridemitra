@@ -1457,7 +1457,7 @@ async function editPassengerBooking(id) {
         .single();
 
     if (error) {
-        showToast(error.message);
+        showToast("Booking error: " + error.message);
         return;
     }
 
@@ -1466,10 +1466,18 @@ async function editPassengerBooking(id) {
         return;
     }
 
-    const name = prompt("Enter passenger name:", booking.passenger_name);
+    const name = prompt(
+        "Enter passenger name:",
+        booking.passenger_name
+    );
+
     if (name === null) return;
 
-    const phone = prompt("Enter 10-digit mobile number:", booking.passenger_phone);
+    const phone = prompt(
+        "Enter 10-digit mobile number:",
+        booking.passenger_phone
+    );
+
     if (phone === null) return;
 
     if (!name.trim() || !/^[0-9]{10}$/.test(phone.trim())) {
@@ -1477,24 +1485,32 @@ async function editPassengerBooking(id) {
         return;
     }
 
-    const { error: updateError } = await supabaseClient
-        .from("booking_requests")
-        .update({
-            passenger_name: name.trim(),
-            passenger_phone: phone.trim()
-        })
-        .eq("id", id)
-        .eq("passenger_id", currentUser.id)
-        .eq("status", "pending");
+    const { data: updated, error: updateError } =
+        await supabaseClient
+            .from("booking_requests")
+            .update({
+                passenger_name: name.trim(),
+                passenger_phone: phone.trim()
+            })
+            .eq("id", id)
+            .eq("passenger_id", currentUser.id)
+            .eq("status", "pending")
+            .select("id")
+            .maybeSingle();
 
     if (updateError) {
         showToast("Edit failed: " + updateError.message);
         return;
     }
 
+    if (!updated) {
+        showToast("Update blocked. Check Supabase permissions.");
+        return;
+    }
+
     showToast("Booking updated successfully!");
     await loadPassengerBookings();
-}
+ }
 
 
 // CANCEL PENDING BOOKING
