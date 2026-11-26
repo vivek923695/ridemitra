@@ -480,11 +480,21 @@ function openPost() {
 // =====================================
 
 function openLogin() {
-    document.getElementById("authModal").classList.add("show");
+    const modal = document.getElementById("authModal");
+
+    if (modal) {
+        modal.classList.add("show");
+        modal.style.display = "flex";
+    }
 }
 
 function closeLogin() {
-    document.getElementById("authModal").classList.remove("show");
+    const modal = document.getElementById("authModal");
+
+    if (modal) {
+        modal.classList.remove("show");
+        modal.style.display = "none";
+    }
 }
 
 // =====================================
