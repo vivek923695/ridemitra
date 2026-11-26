@@ -543,7 +543,59 @@ async function loadCurrentUser() {
 // 6. SIGN UP
 // =====================================
 
-async function signUpUser() {
+async function signInUser() {
+
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+
+    if (!email || !password) {
+        alert("Please enter email and password.");
+        return;
+    }
+
+    const button = document.querySelector(
+        '#authModal button[onclick="signInUser()"]'
+    );
+
+    button.disabled = true;
+    button.textContent = "Logging in...";
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        currentUser = data.user;
+        currentRole = data.user.user_metadata?.role || null;
+
+        updateLoginUI();
+
+        closeLogin();
+
+        alert("Login Successful!");
+
+        await renderRides();
+
+    } catch (error) {
+
+        alert("LOGIN ERROR: " + error.message);
+
+        console.error("Login Error:", error);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Login";
+
+    }
+} {
 
     const email = document.getElementById("authEmail").value.trim();
     const password = document.getElementById("authPassword").value;
