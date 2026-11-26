@@ -465,12 +465,13 @@ async function loadCurrentUser() {
         console.error("User check:", error.message);
     }
 
-    currentUser = user || null;
+currentUser = user || null;
 
-    {
-  "role": "driver"
-}
+currentRole = currentUser?.user_metadata?.role || null;
 
+updateLoginUI();
+
+return currentUser;
     updateLoginUI();
 
     return currentUser;
