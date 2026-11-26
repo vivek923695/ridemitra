@@ -614,7 +614,47 @@ async function postRide(event) {
         return;
     }
 
-    const from = document.getElementById("post
+        const from = document.getElementById("postFrom").value.trim();
+    const to = document.getElementById("postTo").value.trim();
+    const rideDate = document.getElementById("postDate").value;
+    const seats = parseInt(document.getElementById("postSeats").value, 10);
+    const price = parseFloat(document.getElementById("postPrice").value);
+    const driver = document.getElementById("postDriver").value.trim();
+    const vehicle = document.getElementById("postVehicle").value.trim();
+
+    if (!from || !to || !rideDate || !driver || seats < 1 || price < 0) {
+        showToast("Please fill all required fields correctly.");
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("rides")
+            .insert([{
+                owner_id: currentUser.id,
+                from_city: from,
+                to_city: to,
+                ride_date: rideDate,
+                seats_available: seats,
+                price_per_seat: price,
+                driver_name: driver,
+                vehicle_details: vehicle
+            }])
+            .select();
+
+        if (error) throw error;
+
+        document.getElementById("postForm").reset();
+
+        showToast("Ride published successfully!");
+
+        await renderRides();
+
+    } catch (error) {
+        console.error("Post ride error:", error);
+        showToast(error.message || "Unable to publish ride.");
+    }
+}
        </script>
 
 <!-- =====================================
