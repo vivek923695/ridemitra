@@ -82,7 +82,6 @@ main section{padding:48px 0}
 .modal-box{background:white;padding:25px;border-radius:20px;width:min(460px,100%)}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:white;padding:13px 20px;border-radius:12px;display:none;z-index:60;max-width:90%;text-align:center}
 .toast.show{display:block}
-
 @media(max-width:800px){
 .hero-grid{grid-template-columns:1fr}
 .art{min-height:250px}
@@ -93,9 +92,9 @@ main section{padding:48px 0}
 .nav{height:65px}
 .logo{font-size:20px}
 .nav-actions .outline{
-display:inline-block;
-font-size:12px;
-padding:8px;
+    display:inline-block;
+    font-size:12px;
+    padding:8px;
 }
 .hero{padding:35px 0}
 .form-grid,.searchbar{grid-template-columns:1fr}
@@ -110,7 +109,6 @@ main section{padding:35px 0}
 
 <header>
 <div class="container nav">
-
 <a class="logo" href="#">
 <span style="font-size:32px">🚗</span>
 <span>
@@ -118,55 +116,45 @@ main section{padding:35px 0}
 <div class="logo-tag">Travel Together, Save Together.</div>
 </span>
 </a>
-
 <div class="nav-actions">
-<button class="btn outline" id="loginNavButton" onclick="document.getElementById('authModal').style.display='flex'">Login / Signup</button>
+<button class="btn outline" id="loginNavButton" onclick="openLogin()">Login / Signup</button>
 <button class="btn outline" id="logoutNavButton" onclick="logoutUser()" style="display:none">Logout</button>
 <button class="btn outline" onclick="showMyRides()">My Rides</button>
 <button class="btn outline" onclick="openDashboard()">My Dashboard</button>
 <button class="btn primary" onclick="openPost()">+ Offer a ride</button>
 </div>
-
 </div>
 </header>
 
 <section class="hero">
 <div class="container hero-grid">
-
 <div>
 <span class="badge">🤝 SHARING JOURNEYS, BUILDING CONNECTIONS</span>
-
 <h1>Your Journey.<br>Your <span>Mitra.</span></h1>
-
 <p class="intro">
 Find people going your way. Share your ride, save money,
 and make every journey a little easier.
 </p>
 
 <div class="hero-card">
-
 <div class="tabs">
 <button class="tab active" onclick="setMode('search',this)">🔍 Find a ride</button>
 <button class="tab" onclick="setMode('post',this)">➕ Offer a ride</button>
 </div>
 
 <form id="searchForm" class="form-grid" onsubmit="searchRides(event)">
-
 <div class="field">
 <label>FROM</label>
 <input id="searchFrom" placeholder="Starting city">
 </div>
-
 <div class="field">
 <label>TO</label>
 <input id="searchTo" placeholder="Destination">
 </div>
-
 <div class="field">
 <label>DATE</label>
 <input id="searchDate" type="date">
 </div>
-
 <div class="field">
 <label>PASSENGERS</label>
 <select id="searchSeats">
@@ -176,27 +164,22 @@ and make every journey a little easier.
 <option value="4">4 passengers</option>
 </select>
 </div>
-
 <button class="btn primary full wide">Search rides</button>
 </form>
 
 <form id="postForm" class="form-grid" style="display:none" onsubmit="postRide(event)">
-
 <div class="field">
 <label>FROM</label>
 <input id="postFrom" required placeholder="Starting city">
 </div>
-
 <div class="field">
 <label>TO</label>
 <input id="postTo" required placeholder="Destination">
 </div>
-
 <div class="field">
 <label>DATE & TIME</label>
 <input id="postDate" type="datetime-local" required>
 </div>
-
 <div class="field">
 <label>AVAILABLE SEATS</label>
 <select id="postSeats">
@@ -204,30 +187,24 @@ and make every journey a little easier.
 <option>4</option><option>5</option><option>6</option>
 </select>
 </div>
-
 <div class="field">
 <label>PRICE PER SEAT (₹)</label>
 <input id="postPrice" type="number" min="0" required>
 </div>
-
 <div class="field">
 <label>DRIVER NAME</label>
 <input id="postDriver" required>
 </div>
-
 <div class="field wide">
 <label>VEHICLE DETAILS (OPTIONAL)</label>
 <input id="postVehicle" placeholder="Car model / number">
 </div>
-
 <div class="field wide">
 <label>VEHICLE PHOTO (OPTIONAL — JPG/PNG/WEBP, MAX 5 MB)</label>
 <input id="postPhoto" type="file" accept="image/jpeg,image/png,image/webp">
 </div>
-
 <button class="btn primary full wide" id="publishRideButton">Publish ride</button>
 </form>
-
 </div>
 </div>
 
@@ -241,81 +218,66 @@ and make every journey a little easier.
 </div>
 <div class="pill two">🌱 Affordable & community-driven</div>
 </div>
-
 </div>
 </section>
 
 <main>
-
 <section>
 <div class="container">
 <div class="panel">
-
 <div class="panel-title">
 <h2>Available rides</h2>
 <button class="btn outline" onclick="renderRides()">Refresh</button>
 </div>
 
 <form class="searchbar" onsubmit="searchRides(event)">
-
 <div class="field">
 <label>FROM</label>
 <input id="filterFrom" placeholder="Any starting city">
 </div>
-
 <div class="field">
 <label>TO</label>
 <input id="filterTo" placeholder="Any destination">
 </div>
-
 <div class="field">
 <label>DATE</label>
 <input id="filterDate" type="date">
 </div>
-
 <button class="btn primary">Filter</button>
 </form>
 
 <div id="rides" class="rides">
 <div class="empty">Loading rides...</div>
 </div>
-
 </div>
 </div>
 </section>
 
 <section style="background:#eef7f4">
 <div class="container">
-
 <div class="heading">
 <h2>How RideMitra works</h2>
 <p>Three simple steps to a shared journey.</p>
 </div>
-
 <div class="rides">
-
 <div class="ride-card">
 <div class="bigcar">🔍</div>
 <h3>Find a ride</h3>
 <p class="intro">Search by destination and journey date.</p>
 </div>
-
 <div class="ride-card">
 <div class="bigcar">🚗</div>
 <h3>Offer a ride</h3>
 <p class="intro">Post your trip and seats available.</p>
 </div>
-
 <div class="ride-card">
 <div class="bigcar">🤝</div>
 <h3>Travel together</h3>
 <p class="intro">Connect with fellow travellers.</p>
 </div>
-
 </div>
 </div>
 </section>
-
 </main>
 
 <footer class="footer">
@@ -327,10 +289,8 @@ and make every journey a little easier.
 
 <div class="modal" id="authModal">
 <div class="modal-box">
-
 <h2 id="authTitle">Login / Signup</h2>
 <p class="intro">Login to manage your RideMitra account.</p>
-
 <div class="field">
 <label>ACCOUNT TYPE</label>
 <select id="authRole">
@@ -338,56 +298,42 @@ and make every journey a little easier.
 <option value="driver">Driver</option>
 </select>
 </div>
-
 <div class="field" style="margin-top:12px">
 <label>EMAIL</label>
 <input id="authEmail" type="email" placeholder="Enter email">
 </div>
-
 <div class="field" style="margin-top:12px">
 <label>PASSWORD</label>
 <input id="authPassword" type="password" placeholder="Enter password">
 </div>
-
-<button class="btn primary full"
-onclick="alert('Login button clicked'); if(typeof signInUser==='function'){signInUser();}else{alert('Login function not loaded');}">
-Login
-</button>
+<button class="btn primary full" onclick="signInUser()">Login</button>
 <button class="btn outline full" onclick="signUpUser()">Create account</button>
 <button class="btn outline full" onclick="closeLogin()">Close</button>
-
 </div>
 </div>
 
 <div class="modal" id="bookingModal">
 <div class="modal-box">
-
 <h2>Request a seat</h2>
 <div id="bookingInfo" class="intro"></div>
-
 <div class="field">
 <label>YOUR NAME</label>
 <input id="bookName" placeholder="Enter your name">
 </div>
-
 <div class="field" style="margin-top:12px">
 <label>MOBILE NUMBER</label>
 <input id="bookPhone" type="tel" maxlength="10" placeholder="10-digit mobile number">
 </div>
-
 <button class="btn primary full" id="bookingSubmit" onclick="confirmBooking()">Send booking request</button>
 <button class="btn outline full" onclick="closeBooking()">Cancel</button>
-
 </div>
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
-// =====================================
+   // =====================================
 // 1. SUPABASE CONNECTION
 // =====================================
 
@@ -443,7 +389,6 @@ function formatDate(dateValue) {
 }
 
 function setMode(mode, button) {
-
     document.querySelectorAll(".tab").forEach(tab => {
         tab.classList.remove("active");
     });
@@ -458,7 +403,6 @@ function setMode(mode, button) {
 }
 
 function openPost() {
-
     if (!currentUser) {
         showToast("Please login as a driver first.");
         openLogin();
@@ -483,21 +427,11 @@ function openPost() {
 // =====================================
 
 function openLogin() {
-    const modal = document.getElementById("authModal");
-
-    if (modal) {
-        modal.classList.add("show");
-        modal.style.display = "flex";
-    }
+    document.getElementById("authModal").classList.add("show");
 }
 
 function closeLogin() {
-    const modal = document.getElementById("authModal");
-
-    if (modal) {
-        modal.classList.remove("show");
-        modal.style.display = "none";
-    }
+    document.getElementById("authModal").classList.remove("show");
 }
 
 // =====================================
@@ -505,7 +439,6 @@ function closeLogin() {
 // =====================================
 
 function updateLoginUI() {
-
     const loginButton = document.getElementById("loginNavButton");
     const logoutButton = document.getElementById("logoutNavButton");
 
@@ -523,7 +456,6 @@ function updateLoginUI() {
 // =====================================
 
 async function loadCurrentUser() {
-
     const {
         data: { user },
         error
@@ -533,10 +465,13 @@ async function loadCurrentUser() {
         console.error("User check:", error.message);
     }
 
-    currentUser = user || null;
+currentUser = user || null;
 
-    currentRole = currentUser?.user_metadata?.role || null;
+currentRole = currentUser?.user_metadata?.role || null;
 
+updateLoginUI();
+
+return currentUser;
     updateLoginUI();
 
     return currentUser;
@@ -546,66 +481,60 @@ async function loadCurrentUser() {
 // 6. SIGN UP
 // =====================================
 
-async function signInUser() {
-
+async function signUpUser() {
     const email = document.getElementById("authEmail").value.trim();
     const password = document.getElementById("authPassword").value;
+    const role = document.getElementById("authRole").value;
 
     if (!email || !password) {
-        alert("Please enter email and password.");
+        showToast("Please enter email and password.");
         return;
     }
 
-    const button = document.querySelector(
-        '#authModal button[onclick="signInUser()"]'
-    );
-
-    button.disabled = true;
-    button.textContent = "Logging in...";
+    if (password.length < 6) {
+        showToast("Password must be at least 6 characters.");
+        return;
+    }
 
     try {
+        const { data, error } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    role: role
+                }
+            }
+        });
 
-        const { data, error } =
-            await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
+        if (error) throw error;
 
-        if (error) {
-            throw error;
+        if (data.session) {
+            currentUser = data.user;
+            currentRole = role;
+
+            updateLoginUI();
+            closeLogin();
+
+            showToast("Account created successfully!");
+
+            await loadCurrentUser();
+            await renderRides();
+        } else {
+            showToast("Account created. Please check your email if confirmation is required.");
         }
 
-        currentUser = data.user;
-        currentRole = data.user.user_metadata?.role || null;
-
-        updateLoginUI();
-
-        closeLogin();
-
-        alert("Login Successful!");
-
-        await renderRides();
-
     } catch (error) {
-
-        alert("LOGIN ERROR: " + error.message);
-
-        console.error("Login Error:", error);
-
-    } finally {
-
-        button.disabled = false;
-        button.textContent = "Login";
-
+        console.error(error);
+        showToast(error.message || "Signup failed.");
     }
-} 
+}
 
 // =====================================
 // 7. LOGIN
 // =====================================
 
 async function signInUser() {
-
     const email = document.getElementById("authEmail").value.trim();
     const password = document.getElementById("authPassword").value;
 
@@ -615,7 +544,6 @@ async function signInUser() {
     }
 
     try {
-
         const { data, error } =
             await supabaseClient.auth.signInWithPassword({
                 email: email,
@@ -635,10 +563,8 @@ async function signInUser() {
         await renderRides();
 
     } catch (error) {
-
         console.error(error);
         showToast(error.message || "Login failed.");
-
     }
 }
 
@@ -647,7 +573,6 @@ async function signInUser() {
 // =====================================
 
 async function logoutUser() {
-
     const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
@@ -660,8 +585,6 @@ async function logoutUser() {
 
     updateLoginUI();
 
-    document.getElementById("dashboardSection").style.display = "none";
-
     showToast("Logout successful.");
 
     await renderRides();
@@ -672,12 +595,10 @@ async function logoutUser() {
 // =====================================
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
-
     currentUser = session?.user || null;
     currentRole = currentUser?.user_metadata?.role || null;
 
     updateLoginUI();
-
 });
 
 // =====================================
@@ -685,11 +606,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 // =====================================
 
 document.addEventListener("DOMContentLoaded", async () => {
-
     await loadCurrentUser();
     await renderRides();
-
 });
+
+      </script>
+      <script>
 
 // =====================================
 // 11. UPLOAD VEHICLE PHOTO TO STORAGE
@@ -737,6 +659,7 @@ async function uploadVehiclePhoto(file) {
     return publicData.publicUrl;
 }
 
+
 // =====================================
 // 12. POST NEW RIDE
 // =====================================
@@ -756,4 +679,863 @@ async function postRide(event) {
         return;
     }
 
-    const from = document
+    const from = document.getElementById("postFrom").value.trim();
+    const to = document.getElementById("postTo").value.trim();
+    const rideDate = document.getElementById("postDate").value;
+    const seats = Number(document.getElementById("postSeats").value);
+    const price = Number(document.getElementById("postPrice").value);
+    const driver = document.getElementById("postDriver").value.trim();
+    const vehicle = document.getElementById("postVehicle").value.trim();
+
+    const photoInput = document.getElementById("postPhoto");
+    const photoFile = photoInput.files[0];
+
+    if (!from || !to || !rideDate || !driver) {
+        showToast("Please fill all required fields.");
+        return;
+    }
+
+    if (from.toLowerCase() === to.toLowerCase()) {
+        showToast("Starting city and destination cannot be same.");
+        return;
+    }
+
+    if (seats < 1 || seats > 6 || price < 0) {
+        showToast("Please check seats and price.");
+        return;
+    }
+
+    const button = document.getElementById("publishRideButton");
+    button.disabled = true;
+    button.textContent = "Publishing...";
+
+    try {
+
+        // Upload photo first, if selected
+        let photoUrl = null;
+
+        if (photoFile) {
+            photoUrl = await uploadVehiclePhoto(photoFile);
+        }
+
+        // Save ride in Supabase database
+        const { data, error } = await supabaseClient
+            .from("rides")
+            .insert([{
+                from_city: from,
+                to_city: to,
+                ride_date: new Date(rideDate).toISOString(),
+                seats_available: seats,
+                price_per_seat: price,
+                driver_name: driver,
+                vehicle_details: vehicle,
+                vehicle_image_url: photoUrl,
+                owner_id: currentUser.id
+            }])
+            .select();
+
+        if (error) throw error;
+
+        showToast("Ride published successfully!");
+
+        document.getElementById("postForm").reset();
+
+        await renderRides();
+
+        setMode("search", document.querySelector(".tab"));
+
+        document.getElementById("rides").scrollIntoView({
+            behavior: "smooth"
+        });
+
+    } catch (error) {
+
+        console.error("Post ride error:", error);
+
+        showToast("Ride publish failed: " + error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Publish ride";
+
+    }
+}
+
+
+// =====================================
+// 13. LOAD RIDES FROM SUPABASE CLOUD
+// =====================================
+
+async function getRides() {
+
+    const { data, error } = await supabaseClient
+        .from("rides")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Load rides error:", error);
+        throw error;
+    }
+
+    return data || [];
+}
+
+
+// =====================================
+// 14. DISPLAY RIDE CARDS
+// =====================================
+
+function displayRides(rides) {
+
+    const container = document.getElementById("rides");
+
+    if (!rides || rides.length === 0) {
+
+        container.innerHTML = `
+            <div class="empty">
+                <div style="font-size:40px">🚗</div>
+                <h3>No rides found</h3>
+                <p>Try another route or date.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = rides.map(ride => {
+
+        const photo = ride.vehicle_image_url
+            ? `<img class="ride-photo"
+                    src="${escapeHTML(ride.vehicle_image_url)}"
+                    alt="Vehicle photo"
+                    loading="lazy"
+                    onerror="this.style.display='none'">`
+            : "";
+
+        const seats = Number(ride.seats_available || 0);
+
+        return `
+            <div class="ride-card">
+
+                <div class="ride-top">
+                    <div class="route">
+                        ${escapeHTML(ride.from_city)}
+                        <span style="color:#19a875"> → </span>
+                        ${escapeHTML(ride.to_city)}
+                    </div>
+
+                    <div class="price">
+                        ₹${Number(ride.price_per_seat || 0)}
+                    </div>
+                </div>
+
+                ${photo}
+
+                <div class="ride-details">
+                    <span>📅 ${formatDate(ride.ride_date)}</span>
+                    <span>💺 ${seats} seats</span>
+                </div>
+
+                <div class="ride-details">
+                    <span>🚘 ${escapeHTML(ride.vehicle_details || "Vehicle details not provided")}</span>
+                </div>
+
+                <div class="driver">
+                    <div class="avatar">👤</div>
+                    <div>
+                        <strong>${escapeHTML(ride.driver_name || "Driver")}</strong>
+                        <small>RideMitra Driver</small>
+                    </div>
+                </div>
+
+                <button
+                    class="btn primary book"
+                    onclick="openBooking(${Number(ride.id)})"
+                    ${seats <= 0 ? "disabled" : ""}>
+                    ${seats <= 0 ? "No seats available" : "Request a seat"}
+                </button>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+ // =====================================
+// 15. REFRESH RIDES
+// =====================================
+
+async function renderRides() {
+
+    const container = document.getElementById("rides");
+
+    container.innerHTML = `
+        <div class="empty">
+            Loading rides from cloud...
+        </div>
+    `;
+
+    try {
+
+        allRides = await getRides();
+
+        displayRides(allRides);
+
+    } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML = `
+            <div class="empty">
+                <h3>Unable to load rides</h3>
+                <p>${escapeHTML(error.message)}</p>
+                <button class="btn primary"
+                    onclick="renderRides()">Try Again</button>
+            </div>
+        `;
+
+    }
+}
+
+
+// =====================================
+// 16. SEARCH AND FILTER RIDES
+// =====================================
+
+function searchRides(event) {
+
+    if (event) event.preventDefault();
+
+    const from = (
+        document.getElementById("filterFrom").value ||
+        document.getElementById("searchFrom").value
+    ).trim().toLowerCase();
+
+    const to = (
+        document.getElementById("filterTo").value ||
+        document.getElementById("searchTo").value
+    ).trim().toLowerCase();
+
+    const date = (
+        document.getElementById("filterDate").value ||
+        document.getElementById("searchDate").value
+    );
+
+    const seats = Number(
+        document.getElementById("searchSeats").value || 1
+    );
+
+    const filtered = allRides.filter(ride => {
+
+        const matchesFrom = !from ||
+            String(ride.from_city || "").toLowerCase().includes(from);
+
+        const matchesTo = !to ||
+            String(ride.to_city || "").toLowerCase().includes(to);
+
+        const matchesDate = !date ||
+            String(ride.ride_date || "").slice(0, 10) === date;
+
+        const matchesSeats =
+            Number(ride.seats_available || 0) >= seats;
+
+        return matchesFrom && matchesTo &&
+            matchesDate && matchesSeats;
+
+    });
+
+    displayRides(filtered);
+
+    document.getElementById("rides").scrollIntoView({
+        behavior: "smooth"
+    });
+}
+
+
+// =====================================
+// 17. MY RIDES
+// =====================================
+
+async function showMyRides() {
+
+    if (!currentUser) {
+        showToast("Please login to view your rides.");
+        openLogin();
+        return;
+    }
+
+    if (currentRole !== "driver") {
+        showToast("My Rides is available for driver accounts.");
+        return;
+    }
+
+    const container = document.getElementById("rides");
+
+    container.innerHTML = `
+        <div class="empty">Loading your rides...</div>
+    `;
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("rides")
+            .select("*")
+            .eq("owner_id", currentUser.id)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        displayRides(data || []);
+
+        document.getElementById("rides").scrollIntoView({
+            behavior: "smooth"
+        });
+
+        showToast("Your rides loaded.");
+
+    } catch (error) {
+
+        console.error(error);
+        showToast("Unable to load My Rides: " + error.message);
+
+    }
+}
+
+                                         </script>
+        <script>
+
+// =====================================
+// 18. OPEN BOOKING FORM
+// =====================================
+
+function openBooking(rideId) {
+
+    if (!currentUser) {
+        showToast("Booking के लिए पहले Login करें।");
+        openLogin();
+        return;
+    }
+
+    selectedRide = allRides.find(
+        ride => Number(ride.id) === Number(rideId)
+    );
+
+    if (!selectedRide) {
+        showToast("Ride नहीं मिली। Refresh करके दोबारा कोशिश करें।");
+        return;
+    }
+
+    if (selectedRide.owner_id === currentUser.id) {
+        showToast("आप अपनी ही Ride Book नहीं कर सकते।");
+        return;
+    }
+
+    document.getElementById("bookingInfo").innerHTML = `
+        <p><strong>Route:</strong>
+        ${escapeHTML(selectedRide.from_city)}
+        → ${escapeHTML(selectedRide.to_city)}</p>
+
+        <p><strong>Price:</strong>
+        ₹${Number(selectedRide.price_per_seat || 0)} per seat</p>
+
+        <p><strong>Available Seats:</strong>
+        ${Number(selectedRide.seats_available || 0)}</p>
+    `;
+
+    document.getElementById("bookingModal").classList.add("show");
+}
+
+
+// =====================================
+// 19. CLOSE BOOKING FORM
+// =====================================
+
+function closeBooking() {
+
+    document.getElementById("bookingModal")
+        .classList.remove("show");
+
+    selectedRide = null;
+}
+
+
+// =====================================
+// 20. SEND BOOKING REQUEST
+// =====================================
+
+async function confirmBooking() {
+
+    if (!currentUser) {
+        showToast("Please login first.");
+        closeBooking();
+        openLogin();
+        return;
+    }
+
+    if (!selectedRide) {
+        showToast("Please select a ride again.");
+        closeBooking();
+        return;
+    }
+
+    const passengerName =
+        document.getElementById("bookName").value.trim();
+
+    const passengerPhone =
+        document.getElementById("bookPhone").value.trim();
+
+    if (!passengerName) {
+        showToast("Please enter your name.");
+        return;
+    }
+
+    if (!/^[6-9][0-9]{9}$/.test(passengerPhone)) {
+        showToast("Please enter a valid 10-digit mobile number.");
+        return;
+    }
+
+    if (Number(selectedRide.seats_available || 0) < 1) {
+        showToast("No seats available.");
+        closeBooking();
+        await renderRides();
+        return;
+    }
+
+    const button = document.getElementById("bookingSubmit");
+
+    button.disabled = true;
+    button.textContent = "Sending request...";
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("booking_requests")
+            .insert([{
+                ride_id: selectedRide.id,
+                passenger_id: currentUser.id,
+                passenger_name: passengerName,
+                passenger_phone: passengerPhone,
+                seats_requested: 1,
+                status: "pending"
+            }])
+            .select();
+
+        if (error) throw error;
+
+        showToast("Booking request sent successfully!");
+
+        document.getElementById("bookName").value = "";
+        document.getElementById("bookPhone").value = "";
+
+        closeBooking();
+
+    } catch (error) {
+
+        console.error("Booking error:", error);
+
+        showToast("Booking failed: " + error.message);
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Send booking request";
+
+    }
+}
+
+
+// =====================================
+// 21. REFRESH AUTH AND RIDES
+// =====================================
+
+async function refreshRideMitra() {
+
+    await loadCurrentUser();
+
+    await renderRides();
+
+}
+
+
+// =====================================
+// 22. CLOSE MODALS ON BACKGROUND CLICK
+// =====================================
+
+document.getElementById("authModal")
+    .addEventListener("click", function(event) {
+
+        if (event.target === this) {
+            closeLogin();
+        }
+
+    });
+
+document.getElementById("bookingModal")
+    .addEventListener("click", function(event) {
+
+        if (event.target === this) {
+            closeBooking();
+        }
+
+    });
+
+</script>
+<!-- =====================================
+     RIDEMITRA DASHBOARD
+===================================== -->
+
+<section id="dashboardSection" style="display:none">
+<div class="container">
+
+    <div class="heading">
+        <h2>My Dashboard</h2>
+        <p>Manage your rides and booking requests.</p>
+    </div>
+
+    <div class="panel">
+
+        <div class="tabs">
+            <button class="tab active"
+                onclick="showDashboardTab('driver',this)">
+                Driver Bookings
+            </button>
+
+            <button class="tab"
+                onclick="showDashboardTab('passenger',this)">
+                My Bookings
+            </button>
+        </div>
+
+        <div id="driverDashboard">
+            <h3>Booking Requests Received</h3>
+            <div id="driverBookings">
+                Loading...
+            </div>
+        </div>
+
+        <div id="passengerDashboard" style="display:none">
+            <h3>My Booking History</h3>
+            <div id="passengerBookings">
+                Loading...
+            </div>
+        </div>
+
+    </div>
+</div>
+</section>
+
+<script>
+
+// =====================================
+// 1. SHOW DASHBOARD
+// =====================================
+
+async function openDashboard() {
+
+    if (!currentUser) {
+        showToast("Please login first.");
+        openLogin();
+        return;
+    }
+
+    const section = document.getElementById("dashboardSection");
+
+    section.style.display = "block";
+
+    section.scrollIntoView({
+        behavior: "smooth"
+    });
+
+    if (currentRole === "driver") {
+        await loadDriverBookings();
+    } else {
+        await loadPassengerBookings();
+    }
+}
+
+
+// =====================================
+// 2. DASHBOARD TABS
+// =====================================
+
+function showDashboardTab(type, button) {
+
+    document.querySelectorAll("#dashboardSection .tab")
+        .forEach(tab => tab.classList.remove("active"));
+
+    button.classList.add("active");
+
+    document.getElementById("driverDashboard").style.display =
+        type === "driver" ? "block" : "none";
+
+    document.getElementById("passengerDashboard").style.display =
+        type === "passenger" ? "block" : "none";
+
+    if (type === "driver") {
+        loadDriverBookings();
+    } else {
+        loadPassengerBookings();
+    }
+}
+
+
+// =====================================
+// 3. LOAD DRIVER BOOKINGS
+// =====================================
+
+async function loadDriverBookings() {
+
+    const box = document.getElementById("driverBookings");
+
+    if (!currentUser || currentRole !== "driver") {
+        box.innerHTML = "<p>Login with a driver account.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>Loading booking requests...</p>";
+
+    try {
+
+        const { data: rides, error: rideError } =
+            await supabaseClient
+                .from("rides")
+                .select("id,from_city,to_city")
+                .eq("owner_id", currentUser.id);
+
+        if (rideError) throw rideError;
+
+        const rideIds = (rides || []).map(ride => ride.id);
+
+        if (!rideIds.length) {
+            box.innerHTML = "<p>You have not posted any rides yet.</p>";
+            return;
+        }
+
+        const { data: bookings, error } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("*")
+                .in("ride_id", rideIds)
+                .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!bookings || !bookings.length) {
+            box.innerHTML = "<p>No booking requests received yet.</p>";
+            return;
+        }
+
+        box.innerHTML = bookings.map(booking => {
+
+            const ride = rides.find(
+                item => Number(item.id) === Number(booking.ride_id)
+            );
+
+            const status = booking.status || "pending";
+
+            return `
+                <div class="ride-card" style="margin:12px 0">
+
+                    <h3>
+                    ${escapeHTML(ride?.from_city || "")}
+                    →
+                    ${escapeHTML(ride?.to_city || "")}
+                    </h3>
+
+                    <p><b>Passenger:</b>
+                    ${escapeHTML(booking.passenger_name)}</p>
+
+                    <p><b>Phone:</b>
+                    ${escapeHTML(booking.passenger_phone)}</p>
+
+                    <p><b>Seats requested:</b>
+                    ${Number(booking.seats_requested || 1)}</p>
+
+                    <p><b>Status:</b>
+                    ${escapeHTML(status.toUpperCase())}</p>
+
+                    ${
+                        status === "pending"
+                        ? `
+                        <button class="btn primary"
+                        onclick="acceptBooking(${Number(booking.id)})">
+                        Accept
+                        </button>
+
+                        <button class="btn outline"
+                        onclick="rejectBooking(${Number(booking.id)})">
+                        Reject
+                        </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+            `;
+
+        }).join("");
+
+    } catch (error) {
+
+        console.error(error);
+        box.innerHTML =
+            "<p>Dashboard error: " + escapeHTML(error.message) + "</p>";
+
+    }
+}
+
+
+// =====================================
+// 4. ACCEPT BOOKING
+// =====================================
+
+async function acceptBooking(bookingId) {
+
+    if (!confirm("Accept this booking? One seat will be deducted.")) {
+        return;
+    }
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .rpc("accept_booking", {
+                p_booking_id: bookingId
+            });
+
+        if (error) throw error;
+
+        showToast(data || "Booking accepted.");
+
+        await loadDriverBookings();
+        await renderRides();
+
+    } catch (error) {
+
+        console.error(error);
+        showToast("Accept failed: " + error.message);
+
+    }
+}
+
+
+// =====================================
+// 5. REJECT BOOKING
+// =====================================
+
+async function rejectBooking(bookingId) {
+
+    if (!confirm("Reject this booking request?")) {
+        return;
+    }
+
+    try {
+
+        const { data: booking, error: readError } =
+            await supabaseClient
+                .from("booking_requests")
+                .select("id,ride_id")
+                .eq("id", bookingId)
+                .single();
+
+        if (readError) throw readError;
+
+        const { data: ride, error: rideError } =
+            await supabaseClient
+                .from("rides")
+                .select("owner_id")
+                .eq("id", booking.ride_id)
+                .single();
+
+        if (rideError) throw rideError;
+
+        if (ride.owner_id !== currentUser.id) {
+            throw new Error("You are not the ride owner.");
+        }
+
+        const { error } = await supabaseClient
+            .from("booking_requests")
+            .update({ status: "rejected" })
+            .eq("id", bookingId)
+            .eq("status", "pending");
+
+        if (error) throw error;
+
+        showToast("Booking rejected.");
+
+        await loadDriverBookings();
+
+    } catch (error) {
+
+        console.error(error);
+        showToast("Reject failed: " + error.message);
+
+    }
+}
+
+
+// =====================================
+// 6. PASSENGER BOOKING HISTORY
+// =====================================
+
+async function loadPassengerBookings() {
+
+    const box = document.getElementById("passengerBookings");
+
+    if (!currentUser) {
+        box.innerHTML = "<p>Please login first.</p>";
+        return;
+    }
+
+    box.innerHTML = "<p>Loading your bookings...</p>";
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("booking_requests")
+            .select("*")
+            .eq("passenger_id", currentUser.id)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || !data.length) {
+            box.innerHTML = "<p>You have not booked any rides yet.</p>";
+            return;
+        }
+
+        box.innerHTML = data.map(booking => `
+            <div class="ride-card" style="margin:12px 0">
+
+                <h3>Booking #${Number(booking.id)}</h3>
+
+                <p><b>Passenger:</b>
+                ${escapeHTML(booking.passenger_name)}</p>
+
+                <p><b>Phone:</b>
+                ${escapeHTML(booking.passenger_phone)}</p>
+
+                <p><b>Status:</b>
+                ${escapeHTML(
+                    (booking.status || "pending").toUpperCase()
+                )}</p>
+
+                <p><b>Booking Date:</b>
+                ${formatDate(booking.created_at)}</p>
+
+            </div>
+        `).join("");
+
+    } catch (error) {
+
+        console.error(error);
+        box.innerHTML =
+            "<p>History error: " + escapeHTML(error.message) + "</p>";
+
+    }
+}
+
+</script>
+</body>
+</html>                                 
