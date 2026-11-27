@@ -1584,6 +1584,28 @@ onclick="loadAdminStats()">
     </div>
 
 </div>
+    <!-- STEP 6.5: ADMIN ANALYTICS -->
+
+<div class="panel" style="margin-top:20px">
+    <h2>📊 Booking Status Analytics</h2>
+    <div id="adminBookingStatusChart">
+        <div class="empty">Loading booking status chart...</div>
+    </div>
+</div>
+
+<div class="panel" style="margin-top:20px">
+    <h2>📈 Monthly Revenue Trend</h2>
+    <div id="adminMonthlyRevenueChart">
+        <div class="empty">Loading revenue trend...</div>
+    </div>
+</div>
+
+<div class="panel" style="margin-top:20px">
+    <h2>🏆 Driver Booking Comparison</h2>
+    <div id="adminDriverComparisonChart">
+        <div class="empty">Loading driver comparison...</div>
+    </div>
+</div>
 </div>
 
 <div id="adminView-rides"
@@ -2777,6 +2799,7 @@ async function loadAdminDashboardReports() {
         }
         // STEP 6.4 ADVANCED KPI
 renderAdminAdvancedKPIs(data.kpis || {});
+        renderAdminAnalyticsCharts(data);
         // STEP 6.3 DRIVER PERFORMANCE
 renderAdminDriverPerformance(data.driver_performance || []);
 
@@ -2968,7 +2991,182 @@ function renderAdminDriverPerformance(drivers) {
     // =====================================
 // STEP 6.4: ADVANCED KPI DASHBOARD
 // =====================================
+// =====================================
+// STEP 6.5: ADMIN ANALYTICS CHARTS
+// =====================================
 
+function renderAdminAnalyticsCharts(data) {
+
+    const statusBox =
+        document.getElementById("adminBookingStatusChart");
+
+    const revenueBox =
+        document.getElementById("adminMonthlyRevenueChart");
+
+    const driverBox =
+        document.getElementById("adminDriverComparisonChart");
+
+    // BOOKING STATUS CHART
+
+    const status = data.status_breakdown || {};
+
+    const statusItems = [
+        {label:"Accepted", value:Number(status.accepted || 0), color:"#19a875"},
+        {label:"Pending", value:Number(status.pending || 0), color:"#e6a23c"},
+        {label:"Rejected", value:Number(status.rejected || 0), color:"#d9534f"},
+        {label:"Cancelled", value:Number(status.cancelled || 0), color:"#718096"}
+    ];
+
+    const statusMax = Math.max(
+        1,
+        ...statusItems.map(x => x.value)
+    );
+
+    if (statusBox) {
+
+        statusBox.innerHTML = statusItems.map(item => `
+
+            <div style="margin:14px 0">
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                ">
+                    <strong>${item.label}</strong>
+                    <strong>${item.value}</strong>
+                </div>
+
+                <div style="
+                    height:13px;
+                    background:#edf2f7;
+                    border-radius:20px;
+                    overflow:hidden;
+                    margin-top:7px;
+                ">
+                    <div style="
+                        height:100%;
+                        width:${item.value / statusMax * 100}%;
+                        background:${item.color};
+                    "></div>
+                </div>
+
+            </div>
+
+        `).join("");
+
+    }
+
+    // MONTHLY REVENUE TREND
+
+    const months = data.monthly || [];
+
+    const revenueMax = Math.max(
+        1,
+        ...months.map(x => Number(x.estimatedValue || 0))
+    );
+
+    if (revenueBox) {
+
+        revenueBox.innerHTML = months.map(item => {
+
+            const value = Number(
+                item.estimatedValue || 0
+            );
+
+            return `
+
+                <div style="margin:14px 0">
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                    ">
+                        <strong>${escapeHTML(item.month || "")}</strong>
+                        <strong>₹${value.toLocaleString("en-IN")}</strong>
+                    </div>
+
+                    <div style="
+                        height:14px;
+                        background:#edf2f7;
+                        border-radius:20px;
+                        overflow:hidden;
+                        margin-top:7px;
+                    ">
+                        <div style="
+                            height:100%;
+                            width:${value / revenueMax * 100}%;
+                            background:#19a875;
+                        "></div>
+                    </div>
+
+                </div>
+
+            `;
+
+        }).join("") || "No monthly revenue data.";
+
+    }
+
+    // DRIVER BOOKING COMPARISON
+
+    const drivers = [
+        ...(data.driver_performance || [])
+    ]
+    .sort((a,b) =>
+        Number(b.bookings || 0) -
+        Number(a.bookings || 0)
+    )
+    .slice(0,8);
+
+    const driverMax = Math.max(
+        1,
+        ...drivers.map(x => Number(x.bookings || 0))
+    );
+
+    if (driverBox) {
+
+        driverBox.innerHTML = drivers.map((item,index) => {
+
+            const value = Number(item.bookings || 0);
+
+            return `
+
+                <div style="margin:14px 0">
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                    ">
+                        <strong>
+                            ${index + 1}. ${escapeHTML(item.driver_name || "Driver")}
+                        </strong>
+
+                        <strong>${value} bookings</strong>
+                    </div>
+
+                    <div style="
+                        height:14px;
+                        background:#edf2f7;
+                        border-radius:20px;
+                        overflow:hidden;
+                        margin-top:7px;
+                    ">
+                        <div style="
+                            height:100%;
+                            width:${value / driverMax * 100}%;
+                            background:#2878b5;
+                        "></div>
+                    </div>
+
+                </div>
+
+            `;
+
+        }).join("") || "No driver data available.";
+
+    }
+
+    }
 function renderAdminAdvancedKPIs(kpis) {
 
     const box = document.getElementById(
