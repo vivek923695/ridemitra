@@ -2893,16 +2893,102 @@ function viewAdminRide(rideId) {
 
     const stats = ride.bookings || {};
 
-    alert(
-        "RIDE DETAILS\n\n" +
-        "Ride ID: " + ride.id + "\n" +
-        "Route: " + ride.from_city + " to " + ride.to_city + "\n" +
-        "Driver: " + ride.driver_name + "\n" +
-        "Vehicle: " + (ride.vehicle_details || "—") + "\n" +
-        "Seats: " + ride.seats_available + "\n" +
-        "Price: ₹" + ride.price_per_seat + "\n" +
-        "Total Bookings: " + stats.total
-    );
+    const date = ride.ride_date
+        ? new Date(ride.ride_date).toLocaleDateString("en-IN")
+        : "—";
+
+    const modal = document.createElement("div");
+
+    modal.className = "admin-ride-modal-backdrop";
+    modal.id = "adminRideDetailsModal";
+
+    modal.innerHTML = `
+        <div class="admin-ride-modal">
+
+            <h2>🚗 Ride Details #${Number(ride.id)}</h2>
+
+            <hr>
+
+            <div class="admin-ride-detail-grid">
+
+                <div class="admin-ride-detail">
+                    <small>Route</small>
+                    <strong>
+                        ${escapeHTML(ride.from_city || "—")}
+                        → ${escapeHTML(ride.to_city || "—")}
+                    </strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Driver</small>
+                    <strong>${escapeHTML(ride.driver_name || "—")}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Date</small>
+                    <strong>${escapeHTML(date)}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Vehicle</small>
+                    <strong>${escapeHTML(ride.vehicle_details || "—")}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Available Seats</small>
+                    <strong>${Number(ride.seats_available || 0)}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Price Per Seat</small>
+                    <strong>₹${Number(ride.price_per_seat || 0)}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Total Bookings</small>
+                    <strong>${Number(stats.total || 0)}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Pending Bookings</small>
+                    <strong>${Number(stats.pending || 0)}</strong>
+                </div>
+
+                <div class="admin-ride-detail">
+                    <small>Accepted Bookings</small>
+                    <strong>${Number(stats.accepted || 0)}</strong>
+                </div>
+
+            </div>
+
+            <br>
+
+            <button class="btn primary"
+                onclick="closeAdminRideModal()">
+                Close
+            </button>
+
+        </div>
+    `;
+
+    modal.onclick = function(event) {
+        if (event.target === modal) {
+            closeAdminRideModal();
+        }
+    };
+
+    document.body.appendChild(modal);
+}
+
+
+function closeAdminRideModal() {
+
+    const modal =
+        document.getElementById("adminRideDetailsModal");
+
+    if (modal) {
+        modal.remove();
+    }
 
 }
 
