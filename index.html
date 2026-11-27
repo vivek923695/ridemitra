@@ -1527,6 +1527,19 @@ onclick="loadAdminStats()">
 </div>
 
 </div>
+    <!-- STEP 6.4: ADVANCED KPI DASHBOARD -->
+
+<div class="panel" style="margin-top:20px">
+
+    <h2>📊 Platform Performance KPIs</h2>
+
+    <div id="adminAdvancedKPIs" class="rides">
+        <div class="empty">
+            Loading performance KPIs...
+        </div>
+    </div>
+
+</div>
     <!-- STEP 6: ADVANCED ADMIN DASHBOARD -->
 
 <div class="panel" style="margin-top:20px">
@@ -2762,6 +2775,8 @@ async function loadAdminDashboardReports() {
             `;
 
         }
+        // STEP 6.4 ADVANCED KPI
+renderAdminAdvancedKPIs(data.kpis || {});
         // STEP 6.3 DRIVER PERFORMANCE
 renderAdminDriverPerformance(data.driver_performance || []);
 
@@ -2949,6 +2964,72 @@ function renderAdminDriverPerformance(drivers) {
         `;
 
     }).join("");
+}
+    // =====================================
+// STEP 6.4: ADVANCED KPI DASHBOARD
+// =====================================
+
+function renderAdminAdvancedKPIs(kpis) {
+
+    const box = document.getElementById(
+        "adminAdvancedKPIs"
+    );
+
+    if (!box) return;
+
+    const items = [
+
+        {
+            title: "Active Drivers",
+            value: Number(kpis.active_drivers || 0),
+            icon: "🚗"
+        },
+
+        {
+            title: "Acceptance Rate",
+            value: Number(kpis.acceptance_rate || 0) + "%",
+            icon: "✅"
+        },
+
+        {
+            title: "Average Bookings / Ride",
+            value: Number(
+                kpis.average_bookings_per_ride || 0
+            ),
+            icon: "📋"
+        },
+
+        {
+            title: "Estimated Revenue",
+            value: "₹" + Number(
+                kpis.estimated_accepted_value || 0
+            ).toLocaleString("en-IN"),
+            icon: "💰"
+        }
+
+    ];
+
+    box.innerHTML = items.map(item => `
+
+        <div class="ride-card"
+             style="text-align:center;padding:18px">
+
+            <div style="font-size:32px">
+                ${item.icon}
+            </div>
+
+            <h2 style="color:var(--green)">
+                ${item.value}
+            </h2>
+
+            <strong>
+                ${item.title}
+            </strong>
+
+        </div>
+
+    `).join("");
+
 }
 
 // =====================================
