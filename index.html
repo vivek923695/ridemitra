@@ -401,8 +401,10 @@ main section{padding:35px 0}
     background:#fff0ee;
     color:#b33b2e;
 } 
-    /* RIDEMITRA MOBILE LAYOUT FIX */
-@media screen and (max-width: 800px) {
+    /* RIDEMITRA RESPONSIVE HOME PAGE FIX */
+
+@media screen and (max-width: 1024px) {
+
     html, body {
         width: 100%;
         max-width: 100%;
@@ -410,23 +412,97 @@ main section{padding:35px 0}
     }
 
     .container {
-        width: 92% !important;
-        max-width: 100% !important;
+        width: calc(100% - 28px) !important;
+        max-width: 720px !important;
+        margin: auto;
+    }
+
+    /* HEADER */
+    .nav {
+        min-height: 0;
+        height: auto;
+        padding: 10px 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .logo {
+        flex: 1 0 100%;
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+
+    .nav .btn {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 9px 10px;
+        font-size: 12px;
+        white-space: normal;
+    }
+
+    /* HOME HERO */
+    .hero {
+        padding: 28px 0;
     }
 
     .hero-grid {
         display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 20px;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 18px;
     }
 
-    .rides {
-        grid-template-columns: 1fr !important;
-    }
-
-    .hero-card, .panel {
+    .hero-grid > div,
+    .hero-card,
+    .panel,
+    .art {
         width: 100%;
+        min-width: 0;
         max-width: 100%;
+    }
+
+    .art {
+        min-height: 0;
+    }
+
+    .art-box {
+        width: 100%;
+        max-width: 380px;
+    }
+
+    /* SEARCH FORMS */
+    .form-grid,
+    .searchbar {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .wide {
+        grid-column: auto;
+    }
+
+    /* AVAILABLE RIDES */
+    .rides {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 14px;
+    }
+
+    .panel {
+        padding: 16px;
+    }
+
+    .ride-card {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .ride-photo {
+        width: 100%;
+        height: auto;
+        max-height: 220px;
+        object-fit: cover;
     }
 }
 </style>
