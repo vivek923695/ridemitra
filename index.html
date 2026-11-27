@@ -2935,14 +2935,32 @@ function renderAdminUsers(users) {
                         </button>
 
                         ${user.is_admin ? "" : `
-                            <button class="btn outline"
-                                onclick='toggleAdminUserBan(
-                                    ${JSON.stringify(user.id)},
-                                    ${blocked ? "false" : "true"}
-                                )'>
-                                ${blocked ? "Unblock" : "Block"}
-                            </button>
-                        `}
+    <select id="role-${user.id}" class="btn outline">
+        <option value="driver"
+            ${user.role === "driver" ? "selected" : ""}>
+            Driver
+        </option>
+        <option value="passenger"
+            ${user.role === "passenger" ? "selected" : ""}>
+            Passenger
+        </option>
+    </select>
+
+    <button class="btn primary"
+        onclick='updateAdminUserRole(
+            ${JSON.stringify(user.id)}
+        )'>
+        Save Role
+    </button>
+
+    <button class="btn outline"
+        onclick='toggleAdminUserBan(
+            ${JSON.stringify(user.id)},
+            ${blocked ? "false" : "true"}
+        )'>
+        ${blocked ? "Unblock" : "Block"}
+    </button>
+`}
                     </td>
 
                 </tr>
@@ -3073,7 +3091,56 @@ async function loadAdminUserActivity(userId) {
 
 }
 
+// STEP 6.6: UPDATE USER ROLE
+async function updateAdminUserRole(userId) {
 
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    const select = document.getElementById(
+        "role-" + userId
+    );
+
+    if (!select) return;
+
+    const role = select.value;
+
+    if (!["driver", "passenger"].includes(role)) {
+        showToast("Invalid role selected.");
+        return;
+    }
+
+    if (!confirm("Change this user's role to " + role + "?")) {
+        return;
+    }
+
+    try {
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "set_role",
+                        user_id: userId,
+                        role: role
+                    }
+                }
+            );
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        showToast("User role updated successfully.");
+
+        await loadAdminUsers();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message);
+    }
+}
 // BLOCK / UNBLOCK USER
 async function toggleAdminUserBan(userId, blocked) {
 
