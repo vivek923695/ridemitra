@@ -1432,7 +1432,38 @@ class="admin-view">
 onclick="loadAdminRides()">
 Refresh Rides
 </button>
+<!-- STEP 4: ADVANCED RIDE FILTERS -->
 
+<div class="admin-booking-tools">
+
+    <input
+        type="search"
+        id="adminRideSearch"
+        placeholder="Search Ride ID, Route or Driver"
+        oninput="filterAdminRides()"
+    >
+
+    <select
+        id="adminRideFilter"
+        onchange="filterAdminRides()"
+    >
+        <option value="all">All Rides</option>
+        <option value="available">Seats Available</option>
+        <option value="full">Full Rides</option>
+    </select>
+
+    <span
+        class="admin-status"
+        id="adminRideCount"
+    >Rides: —</span>
+
+</div>
+
+<div
+    id="adminDriverReport"
+    class="admin-booking-tools"
+>
+</div>
 <div id="adminRidesList">
 <div class="empty">Loading rides...</div>
 </div>
@@ -2478,7 +2509,357 @@ async function loadAdminStats() {
     }
 }
 
+// =====================================
+// STEP 4: ADVANCED RIDE MANAGEMENT
+// =====================================
 
+let rideMitraAdminRides = [];
+
+async function loadAdminRides() {
+
+    const box = document.getElementById("adminRidesList");
+
+    if (!currentUser || !isRideMitraAdmin) {
+        box.innerHTML = "Admin access required.";
+        return;
+    }
+
+    box.innerHTML =
+        '<div class="empty">Loading rides...</div>';
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "list_rides"
+                    }
+                }
+            );
+
+        if (error) throw error;
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        rideMitraAdminRides =
+            Array.isArray(data.rides) ? data.rides : [];
+
+        filterAdminRides();
+
+        renderAdminDriverReport();
+
+    } catch (error) {
+
+        console.error("Admin rides error:", error);
+
+        box.innerHTML = `
+            <div class="empty">
+                Unable to load rides:
+                ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
+}
+
+
+// =====================================
+// SEARCH AND FILTER RIDES
+// =====================================
+
+function filterAdminRides() {
+
+    const search =
+        document.getElementById("adminRideSearch")
+        ?.value.toLowerCase().trim() || "";
+
+    const filter =
+        document.getElementById("adminRideFilter")
+        ?.value || "all";
+
+    const filtered = rideMitraAdminRides.filter(ride => {
+
+        const text = [
+            ride.id,
+            ride.from_city,
+            ride.to_city,
+            ride.driver_name
+        ].join(" ").toLowerCase();
+
+        const matchesSearch = text.includes(search);
+
+        const seats = Number(ride.seats_available || 0);
+
+        const matchesFilter =
+            filter === "all" ||
+            (filter === "available" && seats > 0) ||
+            (filter === "full" && seats <= 0);
+
+        return matchesSearch && matchesFilter;
+
+    });
+
+    renderAdminRides(filtered);
+
+}
+
+
+// =====================================
+// RENDER ALL RIDES
+// =====================================
+
+function renderAdminRides(rides) {
+
+    const box =
+        document.getElementById("adminRidesList");
+
+    const count =
+        document.getElementById("adminRideCount");
+
+    if (!box) return;
+
+    if (count) {
+        count.textContent =
+            "Showing " + rides.length +
+            " / " + rideMitraAdminRides.length + " Rides";
+    }
+
+    if (!rides.length) {
+
+        box.innerHTML =
+            '<div class="empty">No rides found.</div>';
+
+        return;
+    }
+
+    box.innerHTML = `
+        <div class="admin-booking-table-wrap">
+        <table class="admin-booking-table">
+
+        <thead>
+        <tr>
+            <th>Ride ID</th>
+            <th>Route</th>
+            <th>Driver</th>
+            <th>Date</th>
+            <th>Seats</th>
+            <th>Price</th>
+            <th>Bookings</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        ${rides.map(ride => {
+
+            const stats = ride.bookings || {};
+
+            const date = ride.ride_date
+                ? new Date(ride.ride_date)
+                    .toLocaleString("en-IN")
+                : "—";
+
+            return `
+            <tr>
+
+                <td>#${Number(ride.id)}</td>
+
+                <td>
+                    ${escapeHTML(ride.from_city)}
+                    →
+                    ${escapeHTML(ride.to_city)}
+                </td>
+
+                <td>
+                    ${escapeHTML(ride.driver_name || "—")}
+                </td>
+
+                <td>${escapeHTML(date)}</td>
+
+                <td>
+                    ${Number(ride.seats_available || 0)}
+                </td>
+
+                <td>
+                    ₹${Number(ride.price_per_seat || 0)}
+                </td>
+
+                <td>
+                    Total: ${Number(stats.total || 0)}
+                    <br>
+                    Pending: ${Number(stats.pending || 0)}
+                    <br>
+                    Accepted: ${Number(stats.accepted || 0)}
+                </td>
+
+                <td>
+                    <button
+                        class="admin-booking-action"
+                        onclick="viewAdminRide(${Number(ride.id)})">
+                        View
+                    </button>
+
+                    <button
+                        class="admin-booking-action"
+                        onclick="deleteAdminRide(${Number(ride.id)})">
+                        Delete
+                    </button>
+                </td>
+
+            </tr>
+            `;
+
+        }).join("")}
+
+        </tbody>
+        </table>
+        </div>
+    `;
+}
+
+
+// =====================================
+// DRIVER WISE REPORT
+// =====================================
+
+function renderAdminDriverReport() {
+
+    const box =
+        document.getElementById("adminDriverReport");
+
+    if (!box) return;
+
+    const reports = {};
+
+    rideMitraAdminRides.forEach(ride => {
+
+        const driver = ride.driver_name || "Unknown";
+
+        if (!reports[driver]) {
+            reports[driver] = {
+                rides: 0,
+                bookings: 0
+            };
+        }
+
+        reports[driver].rides++;
+
+        reports[driver].bookings +=
+            Number(ride.bookings?.total || 0);
+
+    });
+
+    box.innerHTML = `
+        <div class="panel" style="width:100%">
+            <h3>Driver-wise Ride Report</h3>
+
+            ${Object.entries(reports).map(([name, data]) => `
+                <p>
+                    <b>${escapeHTML(name)}</b>
+                    — Rides: ${data.rides}
+                    | Bookings: ${data.bookings}
+                </p>
+            `).join("") || "No driver records found."}
+
+        </div>
+    `;
+}
+
+
+// =====================================
+// VIEW RIDE DETAILS
+// =====================================
+
+function viewAdminRide(rideId) {
+
+    const ride = rideMitraAdminRides.find(
+        item => Number(item.id) === Number(rideId)
+    );
+
+    if (!ride) {
+        showToast("Ride not found.");
+        return;
+    }
+
+    const stats = ride.bookings || {};
+
+    alert(
+        "RIDE DETAILS\n\n" +
+        "Ride ID: " + ride.id + "\n" +
+        "Route: " + ride.from_city + " to " + ride.to_city + "\n" +
+        "Driver: " + ride.driver_name + "\n" +
+        "Vehicle: " + (ride.vehicle_details || "—") + "\n" +
+        "Seats: " + ride.seats_available + "\n" +
+        "Price: ₹" + ride.price_per_seat + "\n" +
+        "Total Bookings: " + stats.total
+    );
+
+}
+
+
+// =====================================
+// ADMIN DELETE RIDE
+// =====================================
+
+async function deleteAdminRide(rideId) {
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    const ride = rideMitraAdminRides.find(
+        item => Number(item.id) === Number(rideId)
+    );
+
+    if (!ride) return;
+
+    if (!confirm(
+        "Are you sure you want to delete Ride #" +
+        rideId + "?"
+    )) return;
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "delete_ride",
+                        ride_id: rideId
+                    }
+                }
+            );
+
+        if (error) throw error;
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        showToast("Ride deleted successfully.");
+
+        await loadAdminRides();
+
+        await loadAdminStats();
+
+        await renderRides();
+
+    } catch (error) {
+
+        console.error("Delete ride error:", error);
+
+        showToast(error.message || "Ride deletion failed.");
+
+        alert(error.message || "Ride deletion failed.");
+
+    }
+}
 // =====================================
 // 33. CLOSE ADMIN DASHBOARD
 // =====================================
