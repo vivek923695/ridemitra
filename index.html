@@ -3459,67 +3459,55 @@ function renderAdminAuditLogs(logs) {
 
 function exportAdminAuditLogs() {
 
-    if (!rideMitraAuditLogs.length) {
-        showToast("Please refresh audit logs first.");
+    const logs = Array.isArray(rideMitraAuditLogs)
+        ? rideMitraAuditLogs
+        : [];
+
+    if (logs.length === 0) {
+        showToast("No audit records loaded. Refresh Logs first.");
         return;
     }
 
-    const search =
-        (document.getElementById("adminAuditSearch")?.value || "")
-        .toLowerCase().trim();
-
-    const action =
-        document.getElementById("adminAuditFilter")?.value || "all";
-
-    const rows = rideMitraAuditLogs.filter(log => {
-
-        const admin = (log.admin_email || "").toLowerCase();
-        const target = (log.target_email || "").toLowerCase();
-
-        return (
-    (admin.includes(search) || target.includes(search)) &&
-    (action === "all" || log.action === action)
-);
-    });
-
-    if (!rows.length) {
-        showToast("No records available to export.");
-        return;
-    }
-
-    const csvCell = value =>
-        '"' + String(value ?? "").replace(/"/g, '""') + '"';
-
-    const csvRows = [
-        ["Action", "Admin Email", "Target Email", "Date"],
-        ...rows.map(log => [
-            log.action,
-            log.admin_email,
-            log.target_email || log.target_user_id,
-            log.created_at
-        ])
+    const headers = [
+        "Action",
+        "Admin Email",
+        "Target Email",
+        "Date"
     ];
 
-    const csv = "\uFEFF" +
-        csvRows.map(row => row.map(csvCell).join(",")).join("\r\n");
+    const escapeCSV = value =>
+        '"' + String(value ?? "").replace(/"/g, '""') + '"';
 
-    const blob = new Blob([csv], {
-        type: "text/csv;charset=utf-8;"
-    });
+    const rows = logs.map(log => [
+        log.action || "",
+        log.admin_email || "",
+        log.target_email || log.target_user_id || "",
+        log.created_at || ""
+    ]);
+
+    const csvContent = "\uFEFF" +
+        [headers, ...rows]
+            .map(row => row.map(escapeCSV).join(","))
+            .join("\r\n");
+
+    const blob = new Blob(
+        [csvContent],
+        { type: "text/csv;charset=utf-8;" }
+    );
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "ridemitra-audit-logs.csv";
+    link.download = "RideMitra_Audit_Logs.csv";
 
     document.body.appendChild(link);
     link.click();
-    link.remove();
+    document.body.removeChild(link);
 
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
 
-    showToast("CSV downloaded successfully.");
+    showToast("CSV download started.");
 }
     // =====================================
 // STEP 6: ADVANCED DASHBOARD REPORTS
