@@ -2721,11 +2721,8 @@ function filterAdminRides() {
 
 function renderAdminRides(rides) {
 
-    const box =
-        document.getElementById("adminRidesList");
-
-    const count =
-        document.getElementById("adminRideCount");
+    const box = document.getElementById("adminRidesList");
+    const count = document.getElementById("adminRideCount");
 
     if (!box) return;
 
@@ -2736,16 +2733,14 @@ function renderAdminRides(rides) {
     }
 
     if (!rides.length) {
-
         box.innerHTML =
             '<div class="empty">No rides found.</div>';
-
         return;
     }
 
     box.innerHTML = `
-        <div class="admin-booking-table-wrap">
-        <table class="admin-booking-table">
+        <div class="admin-rides-table-wrap">
+        <table class="admin-rides-table">
 
         <thead>
         <tr>
@@ -2767,36 +2762,39 @@ function renderAdminRides(rides) {
             const stats = ride.bookings || {};
 
             const date = ride.ride_date
-                ? new Date(ride.ride_date)
-                    .toLocaleString("en-IN")
+                ? new Date(ride.ride_date).toLocaleDateString("en-IN")
                 : "—";
 
             return `
             <tr>
 
-                <td>#${Number(ride.id)}</td>
-
-                <td>
-                    ${escapeHTML(ride.from_city)}
-                    →
-                    ${escapeHTML(ride.to_city)}
+                <td data-label="Ride ID">
+                    #${Number(ride.id)}
                 </td>
 
-                <td>
+                <td data-label="Route">
+                    ${escapeHTML(ride.from_city || "—")}
+                    →
+                    ${escapeHTML(ride.to_city || "—")}
+                </td>
+
+                <td data-label="Driver">
                     ${escapeHTML(ride.driver_name || "—")}
                 </td>
 
-                <td>${escapeHTML(date)}</td>
+                <td data-label="Date">
+                    ${escapeHTML(date)}
+                </td>
 
-                <td>
+                <td data-label="Seats">
                     ${Number(ride.seats_available || 0)}
                 </td>
 
-                <td>
+                <td data-label="Price">
                     ₹${Number(ride.price_per_seat || 0)}
                 </td>
 
-                <td>
+                <td data-label="Bookings">
                     Total: ${Number(stats.total || 0)}
                     <br>
                     Pending: ${Number(stats.pending || 0)}
@@ -2804,7 +2802,7 @@ function renderAdminRides(rides) {
                     Accepted: ${Number(stats.accepted || 0)}
                 </td>
 
-                <td>
+                <td data-label="Action">
                     <button
                         class="admin-booking-action"
                         onclick="viewAdminRide(${Number(ride.id)})">
