@@ -1908,6 +1908,143 @@ async function cancelPassengerBooking(id) {
     await loadPassengerBookings();
 }
 
+  // =====================================
+// ADMIN DASHBOARD TAB NAVIGATION
+// =====================================
+
+function showAdminTab(tab, button) {
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    document.querySelectorAll(
+        "#adminSection .admin-tab"
+    ).forEach(btn => btn.classList.remove("active"));
+
+    document.querySelectorAll(
+        "#adminSection .admin-view"
+    ).forEach(view => view.classList.remove("active"));
+
+    button.classList.add("active");
+
+    const section = document.getElementById(
+        "adminView-" + tab
+    );
+
+    if (section) {
+        section.classList.add("active");
+    }
+
+    if (tab === "rides") {
+        loadAdminRides();
+    }
+}
+
+
+// =====================================
+// ADMIN RIDE MANAGEMENT
+// =====================================
+
+async function loadAdminRides() {
+
+    const box = document.getElementById(
+        "adminRidesList"
+    );
+
+    if (!currentUser || !isRideMitraAdmin) {
+        box.innerHTML = "Admin access required.";
+        return;
+    }
+
+    box.innerHTML = "Loading rides...";
+
+    try {
+
+        const { data, error } = await supabaseClient
+            .from("rides")
+            .select("*")
+            .order("created_at", {
+                ascending: false
+            })
+            .limit(50);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            box.innerHTML =
+                '<div class="empty">No rides found.</div>';
+            return;
+        }
+
+        box.innerHTML = `
+        <div class="admin-table-wrap">
+        <table class="admin-table">
+
+        <thead>
+        <tr>
+            <th>Route</th>
+            <th>Driver</th>
+            <th>Date</th>
+            <th>Seats</th>
+            <th>Price</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        ${data.map(ride => `
+
+        <tr>
+
+            <td>
+                ${escapeHTML(ride.from_city)}
+                →
+                ${escapeHTML(ride.to_city)}
+            </td>
+
+            <td>
+                ${escapeHTML(ride.driver_name)}
+            </td>
+
+            <td>
+                ${escapeHTML(formatDate(ride.ride_date))}
+            </td>
+
+            <td>
+                ${Number(ride.seats_available || 0)}
+            </td>
+
+            <td>
+                ₹${Number(ride.price_per_seat || 0)}
+            </td>
+
+        </tr>
+
+        `).join("")}
+
+        </tbody>
+
+        </table>
+        </div>
+        `;
+
+    } catch(error) {
+
+        console.error(error);
+
+        box.innerHTML = `
+        <div class="empty">
+            Unable to load rides.
+            <br>
+            ${escapeHTML(error.message)}
+        </div>
+        `;
+
+    }
+
+}  
 // =====================================
 // 31. OPEN ADMIN DASHBOARD
 // =====================================
