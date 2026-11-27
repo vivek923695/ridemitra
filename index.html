@@ -2249,7 +2249,8 @@ async function loadAdminBookings() {
         </table>
         </div>
         `;
-
+        // Refresh booking search, status filter and count
+        filterAdminBookings();
     } catch(error) {
 
         console.error(error);
