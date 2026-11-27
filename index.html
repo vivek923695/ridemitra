@@ -1770,6 +1770,33 @@ Refresh Rides
             ↻ Refresh Logs
         </button>
     </div>
+    <!-- STEP 6.8: AUDIT SEARCH AND FILTER -->
+<div class="admin-booking-tools">
+
+    <input
+        type="search"
+        id="adminAuditSearch"
+        placeholder="Search Admin Email or User Email"
+        oninput="filterAdminAuditLogs()">
+
+    <select
+        id="adminAuditFilter"
+        onchange="filterAdminAuditLogs()">
+
+        <option value="all">All Actions</option>
+        <option value="user_role_changed">Role Changed</option>
+        <option value="user_blocked">User Blocked</option>
+        <option value="user_unblocked">User Unblocked</option>
+
+    </select>
+
+    <button
+        class="btn primary"
+        onclick="exportAdminAuditLogs()">
+        Download CSV
+    </button>
+
+</div>
 
     <div id="adminAuditLogs">
         <div class="empty">Tap Refresh Logs to load audit history.</div>
@@ -3209,19 +3236,32 @@ async function toggleAdminUserBan(userId, blocked) {
 
 }
     // STEP 6.7: ADMIN AUDIT LOG
+// =====================================
+// STEP 6.7: ADMIN SECURITY AUDIT LOG
+// =====================================
+
 async function loadAdminAuditLogs() {
 
     const box = document.getElementById("adminAuditLogs");
     const message = document.getElementById("adminAuditMessage");
+
+    if (!box || !message) {
+        console.error("Audit log HTML elements missing.");
+        return;
+    }
 
     if (!currentUser || !isRideMitraAdmin) {
         showToast("Admin access required.");
         return;
     }
 
-    box.innerHTML = "Loading audit logs...";
+    box.innerHTML =
+        '<div class="empty">Loading audit logs...</div>';
+
+    message.textContent = "";
 
     try {
+
         const { data, error } =
             await supabaseClient.functions.invoke(
                 "admin-user-management",
@@ -3236,11 +3276,15 @@ async function loadAdminAuditLogs() {
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
 
-        const logs = data.logs || [];
+        const logs = Array.isArray(data.logs)
+            ? data.logs
+            : [];
 
-        if (!logs.length) {
+        if (logs.length === 0) {
+
             box.innerHTML =
                 '<div class="empty">No admin activity recorded yet.</div>';
+
             message.textContent = "Audit records: 0";
             return;
         }
@@ -3256,36 +3300,78 @@ async function loadAdminAuditLogs() {
             const oldValue = log.old_value || {};
             const newValue = log.new_value || {};
 
-            const changeText =
-                log.action === "user_role_changed"
-                ? "Role: " + (oldValue.role || "unassigned") +
-                  " → " + (newValue.role || "unknown")
-                : log.action === "user_blocked"
-                ? "Account blocked"
-                : "Account unblocked";
+            let changeText = "Admin activity recorded.";
+
+            if (log.action === "user_role_changed") {
+
+                changeText =
+                    "Role: " +
+                    (oldValue.role || "unassigned") +
+                    " → " +
+                    (newValue.role || "unknown");
+
+            } else if (log.action === "user_blocked") {
+
+                changeText = "Account blocked";
+
+            } else if (log.action === "user_unblocked") {
+
+                changeText = "Account unblocked";
+
+            }
 
             return `
-                <div class="ride-card" style="margin:12px 0;padding:16px">
-                    <strong>${escapeHTML(labels[log.action] || log.action)}</strong>
-                    <p>Admin: ${escapeHTML(log.admin_email || "Admin")}</p>
-                    <p>Target: ${escapeHTML(log.target_email || log.target_user_id || "Unknown")}</p>
+                <div class="ride-card"
+                     style="margin:12px 0;padding:16px">
+
+                    <h3>
+                        ${escapeHTML(
+                            labels[log.action] || log.action
+                        )}
+                    </h3>
+
+                    <p>
+                        <b>Admin:</b>
+                        ${escapeHTML(log.admin_email || "Admin")}
+                    </p>
+
+                    <p>
+                        <b>Target:</b>
+                        ${escapeHTML(
+                            log.target_email ||
+                            log.target_user_id ||
+                            "Unknown"
+                        )}
+                    </p>
+
                     <p>${escapeHTML(changeText)}</p>
-                    <small>${escapeHTML(formatDate(log.created_at))}</small>
+
+                    <small>
+                        ${escapeHTML(formatDate(log.created_at))}
+                    </small>
+
                 </div>
             `;
 
         }).join("");
 
         message.textContent =
-            "Showing " + logs.length + " latest audit records.";
+            "Showing " + logs.length +
+            " latest audit records.";
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Audit log error:", error);
+
         box.innerHTML =
             '<div class="empty">Unable to load audit logs: ' +
-            escapeHTML(error.message) + '</div>';
+            escapeHTML(error.message) +
+            '</div>';
+
+        message.textContent = "Audit log loading failed.";
+
     }
+    
 }
     // =====================================
 // STEP 6: ADVANCED DASHBOARD REPORTS
