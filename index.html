@@ -400,7 +400,35 @@ main section{padding:35px 0}
 .admin-booking-badge.cancelled{
     background:#fff0ee;
     color:#b33b2e;
-}   
+} 
+    /* RIDEMITRA MOBILE LAYOUT FIX */
+@media screen and (max-width: 800px) {
+    html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .container {
+        width: 92% !important;
+        max-width: 100% !important;
+    }
+
+    .hero-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+    }
+
+    .rides {
+        grid-template-columns: 1fr !important;
+    }
+
+    .hero-card, .panel {
+        width: 100%;
+        max-width: 100%;
+    }
+}
 </style>
 </head>
 
