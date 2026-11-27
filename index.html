@@ -2183,7 +2183,7 @@ async function loadAdminRides() {
 async function loadAdminBookings() {
 
     const box = document.getElementById(
-        "adminBookingsList"
+        "adminBookingsTable"
     );
 
     if (!currentUser || !isRideMitraAdmin) {
@@ -2301,11 +2301,13 @@ async function adminProcessBooking(id, status) {
 
         const {data, error} =
             await supabaseClient.rpc(
-                "admin_update_booking_status",
-                {
-                    p_booking_id: id,
-                    p_status: status
-                }
+                "admin_process_booking",
+{
+    p_booking_id: id,
+    p_action: (
+        status === "accepted" || status === "accept"
+    ) ? "accept" : "reject"
+}
             );
 
         if (error) throw error;
