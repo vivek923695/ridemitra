@@ -2633,6 +2633,7 @@ async function loadAdminStats() {
         `).join("");
 
         showToast("Admin statistics updated.");
+        await loadAdminDashboardReports();
 
     } catch(error) {
 
@@ -2644,6 +2645,178 @@ async function loadAdminStats() {
                 <p>${escapeHTML(error.message)}</p>
             </div>
         `;
+
+    }
+}
+    // =====================================
+// STEP 6: ADVANCED DASHBOARD REPORTS
+// =====================================
+
+async function loadAdminDashboardReports() {
+
+    if (!currentUser || !isRideMitraAdmin) return;
+
+    const monthlyBox =
+        document.getElementById("adminMonthlyReport");
+
+    const revenueBox =
+        document.getElementById("adminRevenueSummary");
+
+    const activityBox =
+        document.getElementById("adminRecentActivity");
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "dashboard_reports"
+                    }
+                }
+            );
+
+        if (error) throw error;
+
+        if (data?.error) {
+            throw new Error(data.error);
+        }
+
+        // MONTHLY BOOKING REPORT
+
+        if (monthlyBox) {
+
+            monthlyBox.innerHTML =
+                (data.monthly || []).map(item => `
+
+                    <div style="
+                        padding:12px;
+                        margin-bottom:10px;
+                        background:#f4f9f7;
+                        border-radius:12px;
+                    ">
+
+                        <strong>${escapeHTML(item.month)}</strong>
+
+                        <p>
+                            Bookings: ${Number(item.bookings)}
+                        </p>
+
+                        <p>
+                            Accepted: ${Number(item.accepted)}
+                        </p>
+
+                        <p>
+                            Pending: ${Number(item.pending)}
+                        </p>
+
+                        <p>
+                            Rejected: ${Number(item.rejected)}
+                        </p>
+
+                    </div>
+
+                `).join("") || "No monthly data available.";
+
+        }
+
+        // REVENUE SUMMARY
+
+        if (revenueBox) {
+
+            const revenue = data.revenue || {};
+
+            revenueBox.innerHTML = `
+
+                <h2 style="color:var(--green)">
+                    ₹${Number(
+                        revenue.estimated_accepted_value || 0
+                    ).toLocaleString("en-IN")}
+                </h2>
+
+                <p>
+                    Accepted Bookings:
+                    <strong>
+                        ${Number(revenue.accepted_bookings || 0)}
+                    </strong>
+                </p>
+
+                <small style="color:var(--muted)">
+                    ${escapeHTML(revenue.note || "")}
+                </small>
+
+            `;
+
+        }
+
+        // RECENT ACTIVITY
+
+        if (activityBox) {
+
+            const activities =
+                data.recent_activity || [];
+
+            activityBox.innerHTML =
+                activities.map(item => `
+
+                    <div style="
+                        padding:12px;
+                        margin-bottom:10px;
+                        border-bottom:1px solid var(--border);
+                    ">
+
+                        <strong>
+                            ${escapeHTML(item.passenger_name)}
+                        </strong>
+
+                        <p>
+                            ${escapeHTML(item.route)}
+                        </p>
+
+                        <p>
+                            Status:
+                            <strong>
+                                ${escapeHTML(item.status)}
+                            </strong>
+                        </p>
+
+                        <small>
+                            ${escapeHTML(
+                                item.created_at
+                                    ? new Date(item.created_at)
+                                        .toLocaleString("en-IN")
+                                    : "—"
+                            )}
+                        </small>
+
+                    </div>
+
+                `).join("") || "No recent activity.";
+
+        }
+
+    } catch(error) {
+
+        console.error(
+            "Dashboard reports error:",
+            error
+        );
+
+        if (monthlyBox) {
+            monthlyBox.innerHTML =
+                "Unable to load monthly report.";
+        }
+
+        if (revenueBox) {
+            revenueBox.innerHTML =
+                "Unable to load revenue summary.";
+        }
+
+        if (activityBox) {
+            activityBox.innerHTML =
+                "Unable to load recent activity.";
+        }
 
     }
 }
