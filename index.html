@@ -1693,15 +1693,70 @@ Refresh Rides
   </div>
 </div>
     </div>
-<div id="adminView-users"
-class="admin-view">
+<div id="adminView-users" class="admin-view">
 
 <div class="panel">
-<h2>👥 User Management</h2>
 
-<div class="empty">
-User management coming next.
-</div>
+    <div class="admin-toolbar">
+        <div>
+            <h2>👥 User Management</h2>
+            <span class="admin-refresh-note">
+                Manage RideMitra accounts
+            </span>
+        </div>
+
+        <button class="btn outline"
+            onclick="loadAdminUsers()">
+            ↻ Refresh Users
+        </button>
+    </div>
+
+    <div class="admin-booking-tools">
+
+        <input id="adminUserSearch"
+            type="search"
+            placeholder="Search Email, Phone or User ID"
+            oninput="filterAdminUsers()">
+
+        <select id="adminUserRoleFilter"
+            onchange="filterAdminUsers()">
+
+            <option value="all">All Users</option>
+            <option value="driver">Drivers</option>
+            <option value="passenger">Passengers</option>
+            <option value="unassigned">Unassigned</option>
+            <option value="admin">Admins</option>
+
+        </select>
+
+        <select id="adminUserStatusFilter"
+            onchange="filterAdminUsers()">
+
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+
+        </select>
+
+        <span id="adminUserCount"
+            class="admin-status">
+            Users: —
+        </span>
+
+    </div>
+
+    <div id="adminUsersList">
+        <div class="empty">
+            Loading users...
+        </div>
+    </div>
+
+    <div id="adminUserDetails"
+        style="margin-top:18px">
+    </div>
+
+    <p id="adminUsersMessage"
+        class="admin-refresh-note"></p>
 
 </div>
 </div>
@@ -2268,6 +2323,9 @@ function showAdminTab(tab, button) {
     if (tab === "bookings") {
     loadAdminBookings();
     }
+    if (tab === "users") {
+    loadAdminUsers();
+    }
 }
 
 
@@ -2695,6 +2753,373 @@ async function loadAdminStats() {
         `;
 
     }
+}
+    // =====================================
+// STEP 6.6: ADMIN USER MANAGEMENT
+// =====================================
+
+let rideMitraAdminUsers = [];
+
+
+// LOAD USERS
+async function loadAdminUsers() {
+
+    const box = document.getElementById(
+        "adminUsersList"
+    );
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    box.innerHTML = "Loading users...";
+
+    try {
+
+        const {data,error} =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "list_users"
+                    }
+                }
+            );
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        rideMitraAdminUsers = data.users || [];
+
+        filterAdminUsers();
+
+        document.getElementById(
+            "adminUsersMessage"
+        ).textContent =
+            "Loaded " + rideMitraAdminUsers.length + " users.";
+
+    } catch(error) {
+
+        console.error(error);
+
+        box.innerHTML =
+            '<div class="empty">Unable to load users: ' +
+            escapeHTML(error.message) + '</div>';
+
+    }
+}
+
+
+// SEARCH AND FILTER
+function filterAdminUsers() {
+
+    const search = (
+        document.getElementById("adminUserSearch")?.value || ""
+    ).toLowerCase().trim();
+
+    const role = (
+        document.getElementById("adminUserRoleFilter")?.value || "all"
+    );
+
+    const status = (
+        document.getElementById("adminUserStatusFilter")?.value || "all"
+    );
+
+    const filtered = rideMitraAdminUsers.filter(user => {
+
+        const text = [
+            user.email,
+            user.phone,
+            user.id,
+            user.role
+        ].join(" ").toLowerCase();
+
+        const userRole = user.is_admin
+            ? "admin"
+            : (user.role || "unassigned").toLowerCase();
+
+        const blocked = user.banned_until &&
+            new Date(user.banned_until).getTime() > Date.now();
+
+        return text.includes(search) &&
+            (role === "all" || role === userRole) &&
+            (status === "all" ||
+                (status === "blocked" ? blocked : !blocked));
+
+    });
+
+    renderAdminUsers(filtered);
+
+}
+
+
+// DISPLAY USERS
+function renderAdminUsers(users) {
+
+    const box = document.getElementById(
+        "adminUsersList"
+    );
+
+    const count = document.getElementById(
+        "adminUserCount"
+    );
+
+    if (!box) return;
+
+    if (count) {
+        count.textContent =
+            "Users: " + users.length + " / " +
+            rideMitraAdminUsers.length;
+    }
+
+    if (!users.length) {
+        box.innerHTML =
+            '<div class="empty">No users found.</div>';
+        return;
+    }
+
+    box.innerHTML = `
+        <div class="admin-table-wrap">
+
+        <table class="admin-table">
+
+        <thead>
+        <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        ${users.map(user => {
+
+            const blocked = user.banned_until &&
+                new Date(user.banned_until).getTime() > Date.now();
+
+            const role = user.is_admin
+                ? "Admin"
+                : (user.role || "Unassigned");
+
+            return `
+                <tr>
+
+                    <td>
+                        <strong>
+                            ${escapeHTML(user.email || "No Email")}
+                        </strong>
+                        <br>
+                        ${escapeHTML(user.phone || "")}
+                        <br>
+                        <small>
+                            Rides: ${Number(user.total_rides || 0)}
+                            | Bookings: ${Number(user.total_bookings || 0)}
+                        </small>
+                    </td>
+
+                    <td>${escapeHTML(role)}</td>
+
+                    <td>
+                        ${user.is_admin
+                            ? "Protected Admin"
+                            : blocked ? "Blocked" : "Active"}
+                    </td>
+
+                    <td>
+                        <button class="btn outline"
+                            onclick='viewAdminUser(${JSON.stringify(user.id)})'>
+                            View
+                        </button>
+
+                        ${user.is_admin ? "" : `
+                            <button class="btn outline"
+                                onclick='toggleAdminUserBan(
+                                    ${JSON.stringify(user.id)},
+                                    ${blocked ? "false" : "true"}
+                                )'>
+                                ${blocked ? "Unblock" : "Block"}
+                            </button>
+                        `}
+                    </td>
+
+                </tr>
+            `;
+
+        }).join("")}
+
+        </tbody>
+        </table>
+        </div>
+    `;
+}
+
+
+// USER PROFILE
+function viewAdminUser(userId) {
+
+    const user = rideMitraAdminUsers.find(
+        item => item.id === userId
+    );
+
+    const box = document.getElementById(
+        "adminUserDetails"
+    );
+
+    if (!user || !box) return;
+
+    const blocked = user.banned_until &&
+        new Date(user.banned_until).getTime() > Date.now();
+
+    box.innerHTML = `
+
+        <div class="panel" style="background:#f4f9f7">
+
+            <h3>👤 User Profile</h3>
+
+            <p>Email: ${escapeHTML(user.email || "N/A")}</p>
+
+            <p>Phone: ${escapeHTML(user.phone || "N/A")}</p>
+
+            <p>User ID: ${escapeHTML(user.id)}</p>
+
+            <p>Role: ${escapeHTML(user.is_admin ? "Admin" : user.role || "Unassigned")}</p>
+
+            <p>Total Rides: ${Number(user.total_rides || 0)}</p>
+
+            <p>Total Bookings: ${Number(user.total_bookings || 0)}</p>
+
+            <p>Created: ${escapeHTML(formatDate(user.created_at))}</p>
+
+            <p>Last Login: ${escapeHTML(formatDate(user.last_sign_in_at))}</p>
+
+            <p>Status: ${user.is_admin ? "Protected Admin" : blocked ? "Blocked" : "Active"}</p>
+
+            <button class="btn primary"
+                onclick='loadAdminUserActivity(${JSON.stringify(user.id)})'>
+                View Booking History
+            </button>
+
+        </div>
+    `;
+
+}
+
+
+// USER BOOKING HISTORY
+async function loadAdminUserActivity(userId) {
+
+    const box = document.getElementById(
+        "adminUserDetails"
+    );
+
+    box.insertAdjacentHTML(
+        "beforeend",
+        '<div id="adminUserActivityLoading">Loading activity...</div>'
+    );
+
+    try {
+
+        const {data,error} =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "user_activity",
+                        user_id: userId
+                    }
+                }
+            );
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        document.getElementById(
+            "adminUserActivityLoading"
+        )?.remove();
+
+        const rows = data.bookings || [];
+
+        const content = rows.length ? rows.map(b => `
+            <div style="
+                padding:12px;
+                margin:10px 0;
+                background:#f4f9f7;
+                border-radius:10px;
+            ">
+                <strong>Booking #${Number(b.id)}</strong>
+                <p>${escapeHTML(b.from_city || "")}
+                    → ${escapeHTML(b.to_city || "")}</p>
+                <p>Passenger: ${escapeHTML(b.passenger_name || "Passenger")}</p>
+                <p>Status: ${escapeHTML(b.status || "pending")}</p>
+                <p>Date: ${escapeHTML(formatDate(b.created_at))}</p>
+            </div>
+        `).join("") :
+        '<div class="empty">No booking history found.</div>';
+
+        box.insertAdjacentHTML(
+            "beforeend",
+            '<h3>📋 Booking History (' + rows.length + ')</h3>' +
+            content
+        );
+
+    } catch(error) {
+
+        showToast(error.message);
+
+    }
+
+}
+
+
+// BLOCK / UNBLOCK USER
+async function toggleAdminUserBan(userId, blocked) {
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    const action = blocked ? "block" : "unblock";
+
+    if (!confirm("Are you sure you want to " + action + " this user?")) {
+        return;
+    }
+
+    try {
+
+        const {data,error} =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "set_ban",
+                        user_id: userId,
+                        blocked: blocked
+                    }
+                }
+            );
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        showToast(
+            blocked
+                ? "User blocked successfully."
+                : "User unblocked successfully."
+        );
+
+        await loadAdminUsers();
+
+    } catch(error) {
+
+        console.error(error);
+        showToast(error.message);
+
+    }
+
 }
     // =====================================
 // STEP 6: ADVANCED DASHBOARD REPORTS
