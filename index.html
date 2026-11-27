@@ -1757,6 +1757,26 @@ Refresh Rides
 
     <p id="adminUsersMessage"
         class="admin-refresh-note"></p>
+    <!-- STEP 6.7: ADMIN SECURITY AUDIT LOG -->
+<div class="panel" style="margin-top:22px">
+    <div class="admin-toolbar">
+        <div>
+            <h2>🔐 Admin Security &amp; Audit Log</h2>
+            <span class="admin-refresh-note">
+                Track admin actions on user accounts
+            </span>
+        </div>
+        <button class="btn outline" onclick="loadAdminAuditLogs()">
+            ↻ Refresh Logs
+        </button>
+    </div>
+
+    <div id="adminAuditLogs">
+        <div class="empty">Tap Refresh Logs to load audit history.</div>
+    </div>
+
+    <p id="adminAuditMessage" class="admin-refresh-note"></p>
+</div>
 
 </div>
 </div>
@@ -3187,6 +3207,85 @@ async function toggleAdminUserBan(userId, blocked) {
 
     }
 
+}
+    // STEP 6.7: ADMIN AUDIT LOG
+async function loadAdminAuditLogs() {
+
+    const box = document.getElementById("adminAuditLogs");
+    const message = document.getElementById("adminAuditMessage");
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    box.innerHTML = "Loading audit logs...";
+
+    try {
+        const { data, error } =
+            await supabaseClient.functions.invoke(
+                "admin-user-management",
+                {
+                    body: {
+                        action: "list_audit_logs",
+                        limit: 100
+                    }
+                }
+            );
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        const logs = data.logs || [];
+
+        if (!logs.length) {
+            box.innerHTML =
+                '<div class="empty">No admin activity recorded yet.</div>';
+            message.textContent = "Audit records: 0";
+            return;
+        }
+
+        const labels = {
+            user_role_changed: "Role Changed",
+            user_blocked: "User Blocked",
+            user_unblocked: "User Unblocked"
+        };
+
+        box.innerHTML = logs.map(log => {
+
+            const oldValue = log.old_value || {};
+            const newValue = log.new_value || {};
+
+            const changeText =
+                log.action === "user_role_changed"
+                ? "Role: " + (oldValue.role || "unassigned") +
+                  " → " + (newValue.role || "unknown")
+                : log.action === "user_blocked"
+                ? "Account blocked"
+                : "Account unblocked";
+
+            return `
+                <div class="ride-card" style="margin:12px 0;padding:16px">
+                    <strong>${escapeHTML(labels[log.action] || log.action)}</strong>
+                    <p>Admin: ${escapeHTML(log.admin_email || "Admin")}</p>
+                    <p>Target: ${escapeHTML(log.target_email || log.target_user_id || "Unknown")}</p>
+                    <p>${escapeHTML(changeText)}</p>
+                    <small>${escapeHTML(formatDate(log.created_at))}</small>
+                </div>
+            `;
+
+        }).join("");
+
+        message.textContent =
+            "Showing " + logs.length + " latest audit records.";
+
+    } catch (error) {
+
+        console.error(error);
+        box.innerHTML =
+            '<div class="empty">Unable to load audit logs: ' +
+            escapeHTML(error.message) + '</div>';
+    }
 }
     // =====================================
 // STEP 6: ADVANCED DASHBOARD REPORTS
