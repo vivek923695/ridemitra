@@ -1558,6 +1558,19 @@ onclick="loadAdminStats()">
     </div>
 
 </div>
+    <!-- STEP 6.3 DRIVER PERFORMANCE -->
+
+<div class="panel" style="margin-top:20px">
+
+    <h2>🏆 Driver Performance</h2>
+
+    <div id="adminDriverPerformance">
+        <div class="empty">
+            Loading driver performance...
+        </div>
+    </div>
+
+</div>
 </div>
 
 <div id="adminView-rides"
@@ -2749,6 +2762,8 @@ async function loadAdminDashboardReports() {
             `;
 
         }
+        // STEP 6.3 DRIVER PERFORMANCE
+renderAdminDriverPerformance(data.driver_performance || []);
 
         // RECENT ACTIVITY
 
@@ -2819,6 +2834,121 @@ async function loadAdminDashboardReports() {
         }
 
     }
+}
+    // =====================================
+// STEP 6.3 DRIVER PERFORMANCE
+// =====================================
+
+function renderAdminDriverPerformance(drivers) {
+
+    const box = document.getElementById(
+        "adminDriverPerformance"
+    );
+
+    if (!box) return;
+
+    if (!drivers || drivers.length === 0) {
+        box.innerHTML =
+            '<div class="empty">No driver data available.</div>';
+        return;
+    }
+
+    const ranked = [...drivers].sort((a, b) =>
+        Number(b.bookings || 0) - Number(a.bookings || 0) ||
+        Number(b.rides || 0) - Number(a.rides || 0)
+    );
+
+    box.innerHTML = ranked.map((driver, index) => {
+
+        const name = escapeHTML(
+            driver.driver_name || "Unknown Driver"
+        );
+
+        const rides = Number(driver.rides || 0);
+        const bookings = Number(driver.bookings || 0);
+        const accepted = Number(driver.accepted || 0);
+        const pending = Number(driver.pending || 0);
+        const rejected = Number(driver.rejected || 0);
+
+        const value = Number(
+            driver.estimated_value || 0
+        );
+
+        const medal =
+            index === 0 ? "🥇" :
+            index === 1 ? "🥈" :
+            index === 2 ? "🥉" : "🚗";
+
+        return `
+            <div style="
+                background:#f4f9f7;
+                border:1px solid var(--border);
+                border-radius:15px;
+                padding:16px;
+                margin-bottom:14px;
+            ">
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    flex-wrap:wrap;
+                    gap:10px;
+                ">
+
+                    <h3 style="margin:0">
+                        ${medal} ${name}
+                    </h3>
+
+                    <strong>
+                        Rank #${index + 1}
+                    </strong>
+
+                </div>
+
+                <div style="
+                    display:grid;
+                    grid-template-columns:1fr 1fr;
+                    gap:14px;
+                    margin-top:16px;
+                ">
+
+                    <div>
+                        <small>Total Rides</small>
+                        <h3>${rides}</h3>
+                    </div>
+
+                    <div>
+                        <small>Total Bookings</small>
+                        <h3>${bookings}</h3>
+                    </div>
+
+                    <div>
+                        <small>Accepted</small>
+                        <h3>${accepted}</h3>
+                    </div>
+
+                    <div>
+                        <small>Pending</small>
+                        <h3>${pending}</h3>
+                    </div>
+
+                    <div>
+                        <small>Rejected</small>
+                        <h3>${rejected}</h3>
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <strong style="color:var(--green)">
+                    Estimated Value: ₹${value.toLocaleString("en-IN")}
+                </strong>
+
+            </div>
+        `;
+
+    }).join("");
 }
 
 // =====================================
