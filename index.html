@@ -505,13 +505,62 @@ main section{padding:35px 0}
         object-fit: cover;
     }
 }
+    /* FINAL MOBILE HOME PAGE ALIGNMENT */
+
+@media screen and (max-width: 800px) {
+
+    .hero-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 22px !important;
+    }
+
+    .hero-grid > div {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .art {
+        position: relative;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 12px !important;
+        min-height: 0 !important;
+        padding: 12px 0;
+    }
+
+    .art .pill {
+        position: static !important;
+        width: 100%;
+        max-width: 380px;
+        text-align: center;
+    }
+
+    .art-box {
+        width: 100% !important;
+        max-width: 380px !important;
+        margin: 0 auto;
+    }
+
+    .panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto;
+    }
+
+    .rides {
+        grid-template-columns: 1fr !important;
+    }
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<div class="container nav">
 <div class="container nav">
 
     <a class="logo" href="#">
