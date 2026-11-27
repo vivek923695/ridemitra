@@ -110,6 +110,114 @@
         width: auto;
     }
 }
+ /* STEP 5 - MOBILE ADMIN DASHBOARD */
+
+.admin-rides-table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+
+.admin-rides-table{
+  width:100%;
+  min-width:900px;
+  border-collapse:collapse;
+}
+
+.admin-ride-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(0,0,0,.65);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+}
+
+.admin-ride-modal{
+  background:white;
+  width:min(520px,100%);
+  max-height:88vh;
+  overflow:auto;
+  border-radius:20px;
+  padding:22px;
+}
+
+.admin-ride-detail-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.admin-ride-detail{
+  background:#f4f9f7;
+  border:1px solid #e4ece9;
+  border-radius:12px;
+  padding:12px;
+}
+
+.admin-ride-detail small{
+  display:block;
+  color:#6b7f8c;
+  margin-bottom:5px;
+}
+
+.admin-ride-detail strong{
+  overflow-wrap:anywhere;
+}
+
+@media(max-width:700px){
+
+  .admin-rides-table{
+    min-width:0;
+    border-spacing:0 12px;
+    border-collapse:separate;
+  }
+
+  .admin-rides-table thead{
+    display:none;
+  }
+
+  .admin-rides-table tbody{
+    display:block;
+  }
+
+  .admin-rides-table tr{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:white;
+    border:1px solid #e4ece9;
+    border-radius:15px;
+    padding:10px;
+    margin-bottom:12px;
+  }
+
+  .admin-rides-table td{
+    padding:10px 5px;
+    overflow-wrap:anywhere;
+    font-size:13px;
+  }
+
+  .admin-rides-table td::before{
+    content:attr(data-label);
+    display:block;
+    font-size:10px;
+    font-weight:bold;
+    color:#6b7f8c;
+    margin-bottom:5px;
+  }
+
+  .admin-rides-table td:nth-child(2),
+  .admin-rides-table td:nth-child(3),
+  .admin-rides-table td:nth-child(7),
+  .admin-rides-table td:nth-child(8){
+    grid-column:1/-1;
+  }
+
+  .admin-ride-detail-grid{
+    grid-template-columns:1fr;
+  }
+}       
  </style>      
 <style>
 :root{
