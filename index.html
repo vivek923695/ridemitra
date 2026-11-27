@@ -1160,46 +1160,141 @@ async function confirmBooking() {
      24. ADMIN DASHBOARD
 ===================================== -->
 
-<section id="adminSection" style="display:none;padding:40px 0;background:#eef7f4">
+<section id="adminSection"
+style="display:none;padding:35px 0;background:#eef7f4">
 
 <div class="container">
 
-    <div class="heading">
-        <h2>🚀 RideMitra Admin Panel</h2>
-        <p>Website overview and management statistics.</p>
-    </div>
+<div class="heading">
+<span class="badge">SECURE ADMIN AREA</span>
+<h2>🚀 RideMitra Control Center</h2>
+<p>Manage your RideMitra platform</p>
+</div>
 
-    <div class="panel">
+<div class="admin-shell">
 
-        <div class="panel-title">
-            <h2>Dashboard Overview</h2>
+<aside class="admin-sidebar">
 
-            <button class="btn primary"
-                onclick="loadAdminStats()">
-                Refresh Stats
-            </button>
-        </div>
+<h3>CONTROL PANEL</h3>
 
-        <div id="adminStats" class="rides">
+<button class="admin-tab active"
+onclick="showAdminTab('overview',this)">
+📊 Overview
+</button>
 
-            <div class="empty">
-                Loading Admin Statistics...
-            </div>
+<button class="admin-tab"
+onclick="showAdminTab('rides',this)">
+🚗 Ride Management
+</button>
 
-        </div>
+<button class="admin-tab"
+onclick="showAdminTab('bookings',this)">
+📋 Bookings
+</button>
 
-        <div style="margin-top:25px">
-            <h3>Admin Account</h3>
-            <p id="adminEmail"></p>
+<button class="admin-tab"
+onclick="showAdminTab('users',this)">
+👥 Users
+</button>
 
-            <button class="btn outline"
-                onclick="closeAdminDashboard()">
-                Close Admin Panel
-            </button>
-        </div>
+<button class="admin-tab"
+onclick="showAdminTab('settings',this)">
+⚙️ Settings
+</button>
 
-    </div>
+</aside>
 
+<div class="admin-content">
+
+<div id="adminView-overview"
+class="admin-view active">
+
+<div class="panel">
+
+<div class="panel-title">
+
+<h2>Dashboard Overview</h2>
+
+<button class="btn primary"
+onclick="loadAdminStats()">
+↻ Refresh
+</button>
+
+</div>
+
+<div id="adminStats" class="rides">
+<div class="empty">Loading statistics...</div>
+</div>
+
+</div>
+</div>
+
+<div id="adminView-rides"
+class="admin-view">
+
+<div class="panel">
+
+<h2>🚗 Ride Management</h2>
+
+<button class="btn primary"
+onclick="loadAdminRides()">
+Refresh Rides
+</button>
+
+<div id="adminRidesList">
+<div class="empty">Loading rides...</div>
+</div>
+
+</div>
+</div>
+
+<div id="adminView-bookings"
+class="admin-view">
+
+<div class="panel">
+<h2>📋 Booking Management</h2>
+
+<div id="adminBookingsList">
+<div class="empty">
+Secure booking management coming next.
+</div>
+</div>
+
+</div>
+</div>
+
+<div id="adminView-users"
+class="admin-view">
+
+<div class="panel">
+<h2>👥 User Management</h2>
+
+<div class="empty">
+User management coming next.
+</div>
+
+</div>
+</div>
+
+<div id="adminView-settings"
+class="admin-view">
+
+<div class="panel">
+
+<h2>⚙️ Admin Account</h2>
+
+<p id="adminEmail"></p>
+
+<button class="btn outline"
+onclick="closeAdminDashboard()">
+Close Admin Panel
+</button>
+
+</div>
+</div>
+
+</div>
+</div>
 </div>
 </section>
 
