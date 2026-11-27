@@ -2046,6 +2046,153 @@ async function loadAdminRides() {
 
 }  
 // =====================================
+// ADMIN BOOKING MANAGEMENT
+// =====================================
+
+async function loadAdminBookings() {
+
+    const box = document.getElementById(
+        "adminBookingsList"
+    );
+
+    if (!currentUser || !isRideMitraAdmin) {
+        box.innerHTML = "Admin access required.";
+        return;
+    }
+
+    box.innerHTML = "Loading bookings...";
+
+    try {
+
+        const {data, error} =
+            await supabaseClient.rpc(
+                "admin_list_bookings"
+            );
+
+        if (error) throw error;
+
+        const bookings = Array.isArray(data) ? data : [];
+
+        if (!bookings.length) {
+            box.innerHTML =
+                '<div class="empty">No bookings found.</div>';
+            return;
+        }
+
+        box.innerHTML = `
+        <div class="admin-table-wrap">
+        <table class="admin-table">
+
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Passenger</th>
+            <th>Phone</th>
+            <th>Route</th>
+            <th>Seats</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        ${bookings.map(b => {
+
+            const status = String(
+                b.status || "pending"
+            ).toLowerCase();
+
+            const action = status === "pending"
+            ? `
+                <button class="btn primary"
+                onclick="adminProcessBooking(${Number(b.id)},'accepted')">
+                Approve
+                </button>
+
+                <button class="btn outline"
+                onclick="adminProcessBooking(${Number(b.id)},'rejected')">
+                Reject
+                </button>
+            `
+            : status;
+
+            return `
+            <tr>
+                <td>#${Number(b.id)}</td>
+                <td>${escapeHTML(b.passenger_name || "")}</td>
+                <td>${escapeHTML(b.passenger_phone || "")}</td>
+                <td>
+                ${escapeHTML(b.from_city || "")}
+                →
+                ${escapeHTML(b.to_city || "")}
+                </td>
+                <td>${Number(b.seats_requested || 1)}</td>
+                <td>${escapeHTML(status)}</td>
+                <td>${action}</td>
+            </tr>
+            `;
+
+        }).join("")}
+
+        </tbody>
+        </table>
+        </div>
+        `;
+
+    } catch(error) {
+
+        console.error(error);
+
+        box.innerHTML =
+        "Booking Error: " + escapeHTML(error.message);
+
+    }
+}
+
+
+// =====================================
+// APPROVE / REJECT BOOKING
+// =====================================
+
+async function adminProcessBooking(id, status) {
+
+    if (!currentUser || !isRideMitraAdmin) {
+        showToast("Admin access required.");
+        return;
+    }
+
+    if (!confirm(
+        "Are you sure you want to " + status + " booking?"
+    )) return;
+
+    try {
+
+        const {data, error} =
+            await supabaseClient.rpc(
+                "admin_update_booking_status",
+                {
+                    p_booking_id: id,
+                    p_status: status
+                }
+            );
+
+        if (error) throw error;
+
+        showToast(data);
+
+        await loadAdminBookings();
+
+        await loadAdminStats();
+
+    } catch(error) {
+
+        console.error(error);
+        showToast(error.message);
+
+    }
+}
+// =====================================
 // 31. OPEN ADMIN DASHBOARD
 // =====================================
 
