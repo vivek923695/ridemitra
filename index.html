@@ -2260,7 +2260,81 @@ async function loadAdminBookings() {
     }
 }
 
+// =====================================
+// ADMIN BOOKING SEARCH AND FILTER
+// =====================================
 
+function filterAdminBookings() {
+
+    const searchInput = document.getElementById(
+        "adminBookingSearch"
+    );
+
+    const statusFilter = document.getElementById(
+        "adminBookingStatusFilter"
+    );
+
+    const countBox = document.getElementById(
+        "adminBookingCount"
+    );
+
+    const table = document.querySelector(
+        "#adminBookingsTable tbody"
+    );
+
+    if (!table) {
+        if (countBox) {
+            countBox.textContent = "Bookings: 0";
+        }
+        return;
+    }
+
+    const search = (
+        searchInput ? searchInput.value : ""
+    ).toLowerCase().trim();
+
+    const selectedStatus = (
+        statusFilter ? statusFilter.value : "all"
+    ).toLowerCase();
+
+    const rows = Array.from(table.querySelectorAll("tr"));
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+
+        const rowText = row.innerText.toLowerCase();
+
+        const statusCell = row.cells[5];
+
+        const rowStatus = statusCell
+            ? statusCell.innerText.toLowerCase().trim()
+            : "";
+
+        const matchesSearch =
+            rowText.includes(search);
+
+        const matchesStatus =
+            selectedStatus === "all" ||
+            rowStatus === selectedStatus;
+
+        const show =
+            matchesSearch && matchesStatus;
+
+        row.style.display = show ? "" : "none";
+
+        if (show) {
+            visibleCount++;
+        }
+
+    });
+
+    if (countBox) {
+        countBox.textContent =
+            "Bookings: " + visibleCount +
+            " / " + rows.length;
+    }
+}
 // =====================================
 // APPROVE / REJECT BOOKING
 // =====================================
