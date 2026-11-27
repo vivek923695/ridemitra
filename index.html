@@ -1461,7 +1461,41 @@ class="admin-view">
 </div>
 </div>
 </div>
+    <div id="adminView-bookings" class="admin-view">
+<div class="container" style="margin-top:22px">
+  <div class="panel">
+    <div class="admin-toolbar">
+      <div>
+        <h3 style="margin:0 0 6px">Advanced Booking Management</h3>
+        <span class="admin-refresh-note">View all bookings and securely approve or reject pending requests.</span>
+      </div>
+      <button class="btn outline" id="adminBookingsRefresh" onclick="loadAdminBookings()">↻ Refresh Bookings</button>
+    </div>
 
+    <div class="admin-booking-tools">
+      <input id="adminBookingSearch" type="search"
+        placeholder="Search booking, passenger or route"
+        oninput="filterAdminBookings()">
+
+      <select id="adminBookingStatusFilter" onchange="filterAdminBookings()">
+        <option value="all">All statuses</option>
+        <option value="pending">Pending</option>
+        <option value="accepted">Accepted</option>
+        <option value="rejected">Rejected</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+
+      <span class="admin-status" id="adminBookingCount">Bookings: —</span>
+    </div>
+
+    <div id="adminBookingsTable">
+      <div class="empty">Load booking records from Supabase.</div>
+    </div>
+
+    <p class="admin-refresh-note" id="adminBookingsMessage" aria-live="polite"></p>
+  </div>
+</div>
+    </div>
 <div id="adminView-users"
 class="admin-view">
 
