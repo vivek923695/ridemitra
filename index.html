@@ -206,6 +206,93 @@ h1 span{color:var(--green)}
 .rides{grid-template-columns:1fr}
 main section{padding:35px 0}
 }
+ /* STEP 4 - ADMIN BOOKING MANAGEMENT */
+
+.admin-booking-tools{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:14px 0;
+}
+
+.admin-booking-tools input,
+.admin-booking-tools select{
+    flex:1;
+    min-width:170px;
+    border:1px solid var(--border);
+    border-radius:11px;
+    padding:12px;
+    font:inherit;
+    background:#fff;
+}
+
+.admin-booking-table-wrap{
+    overflow-x:auto;
+    border:1px solid var(--border);
+    border-radius:14px;
+}
+
+.admin-booking-table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1050px;
+    background:#fff;
+}
+
+.admin-booking-table th,
+.admin-booking-table td{
+    padding:12px 13px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+    font-size:12px;
+    vertical-align:top;
+}
+
+.admin-booking-table th{
+    background:#f4f9f7;
+    color:var(--navy);
+    font-weight:800;
+}
+
+.admin-booking-action{
+    padding:7px 10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-weight:750;
+    cursor:pointer;
+    margin:2px;
+}
+
+.admin-booking-action.accept{
+    color:#08764f;
+}
+
+.admin-booking-action.reject{
+    color:#b33b2e;
+}
+
+.admin-booking-badge{
+    display:inline-block;
+    padding:5px 8px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:850;
+    background:#fff5dd;
+    color:#8a5a00;
+    text-transform:uppercase;
+}
+
+.admin-booking-badge.accepted{
+    background:#e8f7f1;
+    color:#08764f;
+}
+
+.admin-booking-badge.rejected,
+.admin-booking-badge.cancelled{
+    background:#fff0ee;
+    color:#b33b2e;
+}   
 </style>
 </head>
 
