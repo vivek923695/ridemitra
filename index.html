@@ -3476,9 +3476,10 @@ function exportAdminAuditLogs() {
         const admin = (log.admin_email || "").toLowerCase();
         const target = (log.target_email || "").toLowerCase();
 
-        return
-            (admin.includes(search) || target.includes(search)) &&
-            (action === "all" || log.action === action);
+        return (
+    (admin.includes(search) || target.includes(search)) &&
+    (action === "all" || log.action === action)
+);
     });
 
     if (!rows.length) {
