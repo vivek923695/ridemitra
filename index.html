@@ -1903,10 +1903,16 @@ Refresh Rides
 
         </select>
 
-        <span id="adminUserCount"
-            class="admin-status">
-            Users: —
-        </span>
+        <button class="btn primary"
+    type="button"
+    onclick="exportAdminUsersCSV()">
+    ⬇ Export Users CSV
+</button>
+
+<span id="adminUserCount"
+    class="admin-status">
+    Users: —
+</span>
 
     </div>
 
@@ -3186,7 +3192,80 @@ function renderAdminUsers(users) {
     `;
 }
 
+// EXPORT USER LIST AS CSV
+function exportAdminUsersCSV() {
 
+    const users = Array.isArray(rideMitraAdminUsers)
+        ? rideMitraAdminUsers
+        : [];
+
+    if (!users.length) {
+        showToast("No users loaded. Refresh Users first.");
+        return;
+    }
+
+    const headers = [
+        "User ID",
+        "Email",
+        "Phone",
+        "Role",
+        "Status",
+        "Admin",
+        "Total Rides",
+        "Total Bookings",
+        "Created At",
+        "Last Sign In"
+    ];
+
+    const csvCell = value => {
+        const text = String(value ?? "");
+        return '"' + text.replace(/"/g, '""') + '"';
+    };
+
+    const rows = users.map(user => {
+
+        const blocked = user.banned_until &&
+            new Date(user.banned_until).getTime() > Date.now();
+
+        return [
+            user.id,
+            user.email,
+            user.phone,
+            user.is_admin ? "admin" : (user.role || "unassigned"),
+            user.is_admin ? "protected admin" :
+                (blocked ? "blocked" : "active"),
+            user.is_admin ? "Yes" : "No",
+            Number(user.total_rides || 0),
+            Number(user.total_bookings || 0),
+            user.created_at,
+            user.last_sign_in_at
+        ];
+    });
+
+    const csv = "\uFEFF" + [headers, ...rows]
+        .map(row => row.map(csvCell).join(","))
+        .join("\r\n");
+
+    const blob = new Blob([csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+
+    link.download = "ridemitra-users-" +
+        new Date().toISOString().slice(0, 10) + ".csv";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+    showToast("User CSV exported successfully.");
+}
 // USER PROFILE
 function viewAdminUser(userId) {
 
